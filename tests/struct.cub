@@ -1,0 +1,6 @@
+struct Point {
+  x, y
+}
+
+p = Point(1, 2)
+print(p)

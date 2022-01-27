@@ -1,0 +1,18 @@
+//
+//  Factorial.cub
+//
+
+import pragma.cub
+
+func factorial(x) returns {
+	
+	n = 0
+
+	for i in range(x) {
+		n *= i
+	}
+	
+	return n
+}
+
+a = factorial(5) // a = 120

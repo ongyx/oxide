@@ -1,0 +1,17 @@
+//
+//  GreatestCommonDivisor.cub
+//
+
+import pragma.cub
+
+import math
+
+func gcd(p, q) returns {
+	if q == 0 {
+		return p
+	} else {
+		return gcd(q, mod(p, q))
+	}
+}
+
+a = gcd(8, 12) // a = 4
