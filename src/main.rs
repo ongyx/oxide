@@ -1,20 +1,20 @@
 use std::{env, fs};
 
-mod parser;
-mod token;
+use std::iter::zip;
 
-use crate::token::Token;
-use logos::Logos;
+use oxide::parser::oxide_parser;
+use oxide::token::tokenise;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
 
     // open file and parse code
     let code = fs::read_to_string(&args[1]).expect("couldn't read file");
+    let (tokens, spans) = tokenise(code.as_str());
 
-    let mut lex = Token::lexer(code.as_str());
-
-    while let Some(t) = lex.next() {
-        println!("{:?} {:?} {:?}", t, lex.slice(), lex.span());
+    for (t, s) in zip(&tokens, &spans) {
+        println!("{:?} {:?}", t, s);
     }
+
+    println!("{:?}", oxide_parser::expr(&tokens));
 }

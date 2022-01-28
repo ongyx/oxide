@@ -1,7 +1,11 @@
-use logos::Logos;
+use logos::{Logos, Span};
 
 fn clean_str<'a>(s: &'a str) -> &'a str {
     &s[1..s.len() - 1]
+}
+
+pub fn tokenise(code: &str) -> (Vec<Token>, Vec<Span>) {
+    Token::lexer(code).spanned().unzip()
 }
 
 #[derive(Logos, Copy, Clone, Debug, PartialEq)]
@@ -86,6 +90,9 @@ pub enum Token<'a> {
 
     #[token("/")]
     Div,
+
+    #[token("^")]
+    Pow,
 
     // comparisons
     #[token("==")]
