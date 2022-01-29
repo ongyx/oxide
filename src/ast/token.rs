@@ -13,12 +13,12 @@ pub enum Token<'a> {
     // skip whitespace and comments
     #[error]
     #[regex(r"//.*", logos::skip)]
-    #[regex(r"[ \t\n\f]+", logos::skip)]
+    #[regex(r"[ \t\f]+", logos::skip)]
     Error,
 
     // identifier
-    #[regex(r"[^\W\d][\w]*")]
-    ID,
+    #[regex(r"[^\W\d][\w]*", |lex| lex.slice())]
+    ID(&'a str),
 
     // literals
     #[token("true")]
@@ -150,4 +150,7 @@ pub enum Token<'a> {
 
     #[token(".")]
     Dot,
+
+    #[token("\n")]
+    Newline,
 }
