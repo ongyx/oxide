@@ -10,5 +10,5 @@ pub enum Node<'a> {
     Binop(Token<'a>, Box<Node<'a>>, Box<Node<'a>>),
     Unop(Token<'a>, Box<Node<'a>>),
 
-    Atom(Token<'a>),
+    Value(Token<'a>),
 }

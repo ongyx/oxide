@@ -15,9 +15,9 @@ fn array_literal() {
     assert_eq!(
         expr(Ast::new("[1, 2, 3]")),
         Node::Array(vec![
-            Node::Atom(Token::Integer(1)),
-            Node::Atom(Token::Integer(2)),
-            Node::Atom(Token::Integer(3)),
+            Node::Value(Token::Integer(1)),
+            Node::Value(Token::Integer(2)),
+            Node::Value(Token::Integer(3)),
         ])
     )
 }
@@ -28,8 +28,8 @@ fn add() {
         expr(Ast::new("1 + 1")),
         Node::Binop(
             Token::Add,
-            Box::new(Node::Atom(Token::Integer(1))),
-            Box::new(Node::Atom(Token::Integer(1))),
+            Box::new(Node::Value(Token::Integer(1))),
+            Box::new(Node::Value(Token::Integer(1))),
         )
     )
 }
@@ -40,11 +40,11 @@ fn nested_add() {
         expr(Ast::new("(1 + (2 + (3)))")),
         Node::Binop(
             Token::Add,
-            Box::new(Node::Atom(Token::Integer(1))),
+            Box::new(Node::Value(Token::Integer(1))),
             Box::new(Node::Binop(
                 Token::Add,
-                Box::new(Node::Atom(Token::Integer(2))),
-                Box::new(Node::Atom(Token::Integer(3))),
+                Box::new(Node::Value(Token::Integer(2))),
+                Box::new(Node::Value(Token::Integer(3))),
             )),
         )
     );
@@ -54,7 +54,7 @@ fn nested_add() {
 fn assign() {
     assert_eq!(
         expr(Ast::new("a = b")),
-        Node::Assign(vec![Token::ID("a")], Box::new(Node::Atom(Token::ID("b"))))
+        Node::Assign(vec![Token::ID("a")], Box::new(Node::Value(Token::ID("b"))))
     )
 }
 
@@ -65,8 +65,8 @@ fn multiple_assign() {
         Node::Assign(
             vec![Token::ID("a"), Token::ID("b")],
             Box::new(Node::Array(vec![
-                Node::Atom(Token::Integer(1)),
-                Node::Atom(Token::Integer(2))
+                Node::Value(Token::Integer(1)),
+                Node::Value(Token::Integer(2))
             ]))
         )
     )

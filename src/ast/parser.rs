@@ -79,7 +79,7 @@ peg::parser! {
             lhs:@ t:[Token::Pow] rhs:(@) { binop(t, lhs, rhs) }
             --
             // literal value
-            v:value() { Node::Atom(v) }
+            v:value() { Node::Value(v) }
             // expr wrapped in parentheses
             [Token::Lparen] e:expr() [Token::Rparen] {e}
             // array literal
