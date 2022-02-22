@@ -10,7 +10,5 @@ pub mod ast {
 }
 
 pub mod runtime {
-    mod object;
-
-    pub use object::Object;
+    pub mod types;
 }
