@@ -1,11 +1,15 @@
-use crate::types::{Object, ObjectResult};
+use crate::object_impl;
+use crate::types::Object;
 
 pub type Str = String;
 
 impl Object for Str {
-    fn add(self, other: Self) -> ObjectResult<Self> {
-        let mut s = self.clone();
-        s.push_str(&other);
-        Ok(s)
-    }
+    object_impl!(
+        self,
+        add(other) -> Self {
+            let mut s = self.clone();
+            s.push_str(&other);
+            Ok(s)
+        }
+    );
 }
