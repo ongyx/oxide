@@ -1,60 +1,82 @@
-use logos::Span;
-use peg::error::ParseError;
-
 use crate::ast::node::Node;
-use crate::ast::token::{tokenise, Token};
+use crate::ast::token::Token;
 
-pub struct Ast<'a> {
-    pub tokens: Vec<Token<'a>>,
-    pub spans: Vec<Span>,
-    pub root: Option<Node<'a>>,
-    pub err: Option<ParseError<usize>>,
-}
-
-impl<'a> Ast<'a> {
-    pub fn new(code: &str) -> Ast {
-        let (tokens, spans) = tokenise(code);
-
-        match oxide_parser::body(&tokens) {
-            Ok(node) => Ast {
-                tokens,
-                spans,
-                root: Some(node),
-                err: None,
-            },
-            Err(e) => Ast {
-                tokens,
-                spans,
-                root: None,
-                err: Some(e),
-            },
-        }
+#[inline(always)]
+fn binop<'a>(op: Token<'a>, lhs: Node<'a>, rhs: Node<'a>) -> Node<'a> {
+    Node::Binop {
+        op,
+        lhs: Box::new(lhs),
+        rhs: Box::new(rhs),
     }
 }
 
 #[inline(always)]
-fn binop<'a>(op: Token<'a>, lhs: Node<'a>, rhs: Node<'a>) -> Node<'a> {
-    Node::Binop(op, Box::new(lhs), Box::new(rhs))
-}
-
-#[inline(always)]
 fn unop<'a>(op: Token<'a>, rhs: Node<'a>) -> Node<'a> {
-    Node::Unop(op, Box::new(rhs))
+    Node::Unop {
+        op,
+        lhs: Box::new(rhs),
+    }
 }
 
 peg::parser! {
-    grammar oxide_parser<'a>() for [Token<'a>] {
+    pub grammar oxide_parser<'a>() for [Token<'a>] {
 
         pub rule body() -> Node<'a>
-            = s:statement()* {Node::Body(s)}
+            = [Token::Lbrace] s:statements() [Token::Rbrace] {s}
+            / s:statements() ![_] {s}
 
-        pub rule statement() -> Node<'a>
-            = a:assignment() [Token::Newline]* {a}
-            / e:expr() [Token::Newline]* {e}
+        rule statements() -> Node<'a>
+            = s:(statement() ++ [Token::Newline]) {Node::Body(s)}
+
+        rule statement() -> Node<'a>
+            = s:simple_statement() {s}
+            / c:compound_statement() {c}
+
+        rule simple_statement() -> Node<'a>
+            = a:assignment() {a}
+            / e:expr() {e}
+            / r:return_() {r}
+
+        rule compound_statement() -> Node<'a>
+            = l:for_loop() {l}
+            / l:while_loop() {l}
+            / f:function() {f}
+
+        rule for_loop() -> Node<'a>
+            = [Token::For] init:assignment() [Token::Comma] cond:expr() [Token::Comma] next:assignment() body:body() {
+                Node::Loop{
+                    init: Some(Box::new(init)),
+                    cond: Box::new(cond),
+                    next: Some(Box::new(next)),
+                    body: Box::new(body)
+                }
+            }
+
+        rule while_loop() -> Node<'a>
+            = [Token::While] cond:expr() body:body() {
+                Node::Loop{
+                    init: None,
+                    cond: Box::new(cond),
+                    next: None,
+                    body: Box::new(body)
+                }
+            }
+
+        rule function() -> Node<'a>
+            = [Token::Func] name:[Token::ID(_)] [Token::Lparen] params:target()? [Token::Rparen] body:body() {
+                Node::Function{
+                    name,
+                    params: params.unwrap_or(vec![]),
+                    body: Box::new(body)
+                }
+            }
+
+        rule return_() -> Node<'a>
+            = [Token::Return] e:expr() {Node::Return(Box::new(e))}
 
         rule assignment() -> Node<'a>
             = t:target() [Token::Assign] e:expr() {
-            Node::Assign(t, Box::new(e))
+            Node::Assign{targets: t, expr: Box::new(e)}
         }
 
         rule target() -> Vec<Token<'a>>
