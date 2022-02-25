@@ -1,35 +1,58 @@
 use crate::ast::token::Token;
 
+// these are the same type but have different semantic meaning.
+pub type Body<'a> = Vec<Node<'a>>;
+pub type Exprs<'a> = Vec<Node<'a>>;
+
+pub type BoxedNode<'a> = Box<Node<'a>>;
+
 #[derive(Debug, PartialEq)]
 pub enum Node<'a> {
-    Body(Vec<Node<'a>>),
     Loop {
-        init: Option<Box<Node<'a>>>,
-        cond: Box<Node<'a>>,
-        next: Option<Box<Node<'a>>>,
-        body: Box<Node<'a>>,
+        init: Option<BoxedNode<'a>>,
+        cond: BoxedNode<'a>,
+        next: Option<BoxedNode<'a>>,
+        body: Body<'a>,
     },
+
     Function {
         name: Token<'a>,
         params: Vec<Token<'a>>,
-        body: Box<Node<'a>>,
+        body: Body<'a>,
     },
-    Return(Box<Node<'a>>),
-    Assign {
-        targets: Vec<Token<'a>>,
-        expr: Box<Node<'a>>,
+    Call {
+        name: Token<'a>,
+        args: Exprs<'a>,
+    },
+    Return(BoxedNode<'a>),
+
+    If {
+        if_: Vec<(BoxedNode<'a>, Body<'a>)>,
+        else_: Option<Body<'a>>,
     },
 
-    Array(Vec<Node<'a>>),
+    Keyword(Token<'a>),
+
+    Assign {
+        targets: Vec<Token<'a>>,
+        expr: BoxedNode<'a>,
+    },
+    AugAssign {
+        target: Token<'a>,
+        op: Token<'a>,
+        expr: BoxedNode<'a>,
+    },
+
+    Array(Exprs<'a>),
 
     Binop {
         op: Token<'a>,
-        rhs: Box<Node<'a>>,
-        lhs: Box<Node<'a>>,
+        lhs: BoxedNode<'a>,
+        rhs: BoxedNode<'a>,
     },
     Unop {
         op: Token<'a>,
-        lhs: Box<Node<'a>>,
+        rhs: BoxedNode<'a>,
     },
 
     Value(Token<'a>),
