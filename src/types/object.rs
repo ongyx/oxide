@@ -19,7 +19,7 @@ macro_rules! object_impl {
 macro_rules! object_impl {
     ($self:ident, $($method:ident ($($arg:ident),*) -> $ret:ty $body:block),+) => {
         $(
-            fn $method($self $(, $arg: Self)*) -> $crate::types::ObjectResult<$ret> {
+            fn $method(&mut $self $(, $arg: Self)*) -> $crate::types::ObjectResult<$ret> {
                 $body
             }
         )+
@@ -30,7 +30,7 @@ macro_rules! object_method {
     ($($method:ident ($($arg:ident),*) -> $ret:ty),+) => {
         $(
             #[allow(unused_variables)]
-            fn $method(self $(, $arg: Self)*) -> ObjectResult<$ret> {
+            fn $method(&mut self $(, $arg: Self)*) -> ObjectResult<$ret> {
                 Err(ObjectError::Unimplemented)
             }
         )+
@@ -39,11 +39,20 @@ macro_rules! object_method {
 
 pub trait Object: Sized {
     object_method!(
+        // arithmetic
         add(other) -> Self,
         sub(other) -> Self,
         mul(other) -> Self,
         div(other) -> Self,
         pow(other) -> Self,
+
+        // in-place arithmetic
+        iadd(other) -> (),
+        isub(other) -> (),
+        imul(other) -> (),
+        idiv(other) -> (),
+        ipow(other) -> (),
+
         eq(other) -> bool,
         le(other) -> bool,
         lt(other) -> bool,
