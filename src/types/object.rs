@@ -4,17 +4,6 @@ pub enum ObjectError {
 
 pub type ObjectResult<T> = Result<T, ObjectError>;
 
-/*
-#[macro_export]
-macro_rules! object_impl {
-    ($self:ident, $method:ident $(, $arg:ident)*, $body:block) => {
-        fn $method($self $(, $arg: Self)*) -> $crate::types::ObjectResult<Self> {
-            $body
-        }
-    };
-}
-*/
-
 #[macro_export]
 macro_rules! object_impl {
     ($self:ident, $($method:ident ($($arg:ident),*) -> $ret:ty $body:block),+) => {

@@ -12,16 +12,13 @@ pub use number::{Float, Integer};
 pub use object::{Object, ObjectError, ObjectResult};
 pub use string::Str;
 
-pub enum Primitive {
+#[derive(Clone, Debug)]
+pub enum Value {
     Boolean(Boolean),
     Float(Float),
     Integer(Integer),
     Nil(Nil),
     Str(Str),
-}
-
-pub enum Value {
-    Primitive(Primitive),
     Array(Vec<Value>),
-    Struct(HashMap<Primitive, Value>),
+    Struct(HashMap<Value, Value>),
 }

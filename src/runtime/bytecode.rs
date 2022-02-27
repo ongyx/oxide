@@ -1,40 +1,10 @@
-pub enum Opcode {
-    // stack
-    PushConst = 0,
-    Pop = 1,
-    Load = 2,
-    LoadGlobal = 3,
-    Store = 4,
-    StoreGlobal = 5,
-    Delete = 6,
-    DeleteGlobal = 7,
+use crate::runtime::Opcode;
+use crate::types::Value;
 
-    // binop/unop
-    Add = 8,
-    Sub = 9,
-    Mul = 10,
-    Div = 11,
-    Pow = 12,
-    IAdd = 13,
-    ISub = 14,
-    IMul = 15,
-    IDiv = 16,
-    IPow = 17,
-    Eq = 18,
-    Le = 19,
-    Lt = 20,
-    Ge = 21,
-    Gt = 22,
-    Ne = 23,
-    And = 24,
-    Or = 25,
-    Not = 26,
-
-    // jump/function
-    Jump = 32,
-    JumpIf = 33,
-    JumpIfNot = 34,
-    Func = 35,
-    Return = 36,
-    Call = 37,
+/// Bytecode represents a VM instruction to execute.
+pub struct Bytecode {
+    /// The opcode of the instruction.
+    pub op: Opcode,
+    /// The args to pass to the instruction.
+    pub args: Vec<Value>,
 }
