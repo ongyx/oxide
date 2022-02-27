@@ -16,14 +16,9 @@ impl VM {
 
     pub fn execute(&mut self, bytecode: Vec<Bytecode>) -> VMResult {
         for bc in bytecode.iter() {
-            let func = self
-                .table
-                .lookup(&bc.op)
-                .ok_or(VMError::UnknownOp)?
-                .func
-                .clone();
+            let ins = self.table.lookup(bc.op).ok_or(VMError::UnknownOp)?;
 
-            (func)(self, &bc.args)?;
+            (ins.func)(self, &bc.args)?;
         }
 
         Ok(())

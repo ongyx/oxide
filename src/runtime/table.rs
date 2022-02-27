@@ -36,7 +36,7 @@ impl Table {
         Table(table)
     }
 
-    pub fn lookup<'a>(&'a self, op: &Opcode) -> Option<&'a Instruction> {
-        self.0.get(op)
+    pub fn lookup<'a>(&'a self, op: Opcode) -> Option<&'a Instruction> {
+        self.0.get(&op)
     }
 }

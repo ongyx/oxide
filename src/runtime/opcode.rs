@@ -1,6 +1,6 @@
 use strum::IntoStaticStr;
 
-#[derive(PartialEq, Eq, Hash, IntoStaticStr)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, IntoStaticStr)]
 #[strum(serialize_all = "snake_case")]
 pub enum Opcode {
     // stack
