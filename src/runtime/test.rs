@@ -1,5 +1,4 @@
-use crate::runtime::{Bytecode, Opcode, VM};
-use crate::types::Value;
+use crate::runtime::{Bytecode, Opcode, Value, VM};
 
 #[test]
 fn push_const() {
@@ -14,6 +13,8 @@ fn push_const() {
         Err(e) => panic!("{:?}", e),
     }
 
-    println!("{:?}", vm.stack);
-    assert!(matches!(vm.stack[0], Value::Nil(_)))
+    let frame = vm.stack.current_frame().expect("no global stack frame");
+
+    println!("{:?}", frame.eval);
+    assert!(matches!(frame.eval[0], Value::Nil(_)))
 }

@@ -1,7 +1,9 @@
 #[derive(Debug)]
 pub enum VMError {
-    NotEnoughArgs,
     EndOfStack,
+    EndOfEvalStack,
+    InvalidArgs,
+    NotEnoughArgs,
     UnknownOp,
 }
 

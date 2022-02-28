@@ -1,5 +1,4 @@
-use crate::runtime::Opcode;
-use crate::types::Value;
+use crate::runtime::{Opcode, Value};
 
 /// Bytecode represents a VM instruction to execute.
 pub struct Bytecode {

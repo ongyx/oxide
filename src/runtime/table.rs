@@ -20,13 +20,13 @@ macro_rules! create_table {
 impl Table {
     pub fn new() -> Self {
         let table: HashMap<_, _> = create_table!(
-            PushConst(|vm, args| {
+            PushConst(|frame, args| {
                 let value = args.get(0).ok_or(VMError::NotEnoughArgs)?;
-                vm.stack.push(value.clone());
+                frame.eval.push(value.clone());
                 Ok(())
             }),
-            Pop(|vm, _| {
-                vm.stack.pop().ok_or(VMError::EndOfStack)?;
+            Pop(|frame, _| {
+                frame.eval.pop().ok_or(VMError::EndOfEvalStack)?;
                 Ok(())
             })
         )
