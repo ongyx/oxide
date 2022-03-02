@@ -1,7 +1,7 @@
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
-use crate::object_impl;
-use crate::types::Object;
+use crate::type_impl;
+use crate::types::Type;
 
 trait Number:
     Sized
@@ -22,11 +22,11 @@ trait Number:
 pub type Integer = i64;
 pub type Float = f64;
 
-impl<T> Object for T
+impl<T> Type for T
 where
     T: Number,
 {
-    object_impl!(
+    type_impl!(
         self,
 
         add(other) -> Self {
@@ -96,8 +96,8 @@ where
     );
 }
 
-impl Object for Integer {
-    object_impl!(
+impl Type for Integer {
+    type_impl!(
         self,
         pow(other) -> Self {
             Ok(Integer::pow(*self, other as u32))
@@ -105,8 +105,8 @@ impl Object for Integer {
     );
 }
 
-impl Object for Float {
-    object_impl!(
+impl Type for Float {
+    type_impl!(
         self,
         pow(other) -> Self {
             Ok(Float::powf(*self, other))

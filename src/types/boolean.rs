@@ -1,10 +1,10 @@
-use crate::object_impl;
-use crate::types::Object;
+use crate::type_impl;
+use crate::types::Type;
 
 pub type Boolean = bool;
 
-impl Object for Boolean {
-    object_impl!(
+impl Type for Boolean {
+    type_impl!(
         self,
         eq(other) -> bool {
             Ok(*self == other)

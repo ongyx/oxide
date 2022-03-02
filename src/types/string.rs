@@ -1,10 +1,10 @@
-use crate::object_impl;
-use crate::types::Object;
+use crate::type_impl;
+use crate::types::Type;
 
 pub type Str = String;
 
-impl Object for Str {
-    object_impl!(
+impl Type for Str {
+    type_impl!(
         self,
         add(other) -> Self {
             let mut s = self.clone();

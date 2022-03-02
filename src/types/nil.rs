@@ -1,5 +1,5 @@
-use crate::types::Object;
+use crate::types::Type;
 
 pub type Nil = ();
 
-impl Object for Nil {}
+impl Type for Nil {}

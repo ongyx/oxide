@@ -1,15 +1,15 @@
 use std::collections::HashMap;
 
-use crate::runtime::{StackError, Value};
+use crate::runtime::{ObjectPtr, StackError};
 
 const STACK_SIZE: usize = u8::MAX as usize;
 
 /// A VM stack frame.
 pub struct Frame {
     /// Namespace for variables.
-    pub vars: HashMap<String, Value>,
+    pub vars: HashMap<String, ObjectPtr>,
     /// Evaluation stack for bytecode operations.
-    pub eval: Vec<Value>,
+    pub eval: Vec<ObjectPtr>,
 }
 
 impl Frame {

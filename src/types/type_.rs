@@ -1,33 +1,33 @@
-pub enum ObjectError {
+pub enum TypeError {
     Unimplemented,
 }
 
-pub type ObjectResult<T> = Result<T, ObjectError>;
+pub type TypeResult<T> = Result<T, TypeError>;
 
 #[macro_export]
-macro_rules! object_impl {
+macro_rules! type_impl {
     ($self:ident, $($method:ident ($($arg:ident),*) -> $ret:ty $body:block),+) => {
         $(
-            fn $method(&mut $self $(, $arg: Self)*) -> $crate::types::ObjectResult<$ret> {
+            fn $method(&mut $self $(, $arg: Self)*) -> $crate::types::TypeResult<$ret> {
                 $body
             }
         )+
     };
 }
 
-macro_rules! object_method {
+macro_rules! type_method {
     ($($method:ident ($($arg:ident),*) -> $ret:ty),+) => {
         $(
             #[allow(unused_variables)]
-            fn $method(&mut self $(, $arg: Self)*) -> ObjectResult<$ret> {
-                Err(ObjectError::Unimplemented)
+            fn $method(&mut self $(, $arg: Self)*) -> TypeResult<$ret> {
+                Err(TypeError::Unimplemented)
             }
         )+
     };
 }
 
-pub trait Object: Sized {
-    object_method!(
+pub trait Type: Sized {
+    type_method!(
         // arithmetic
         add(other) -> Self,
         sub(other) -> Self,
