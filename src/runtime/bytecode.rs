@@ -1,9 +1,26 @@
-use crate::runtime::{Opcode, Value};
+use crate::runtime::{Instruction, Stack, VMResult};
 
-/// Bytecode represents a VM instruction to execute.
+/// A chunk of executable instructions.
 pub struct Bytecode {
-    /// The opcode of the instruction.
-    pub op: Opcode,
-    /// The args to pass to the instruction.
-    pub args: Vec<Value>,
+    /// Compiled instructions.
+    pub code: Vec<Instruction>,
+    /// Local variable names.
+    pub locals: Vec<String>,
+}
+
+impl Bytecode {
+    pub fn new(code: Vec<Instruction>) -> Self {
+        Self {
+            code,
+            locals: Vec::new(),
+        }
+    }
+
+    pub fn execute(&self, stack: &mut Stack) -> VMResult {
+        for ins in self.code.iter() {
+            ins.run(self, stack)?;
+        }
+
+        Ok(())
+    }
 }

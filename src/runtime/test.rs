@@ -1,12 +1,12 @@
-use crate::runtime::{Bytecode, Opcode, Value, VM};
+use crate::runtime::{Bytecode, Instruction, Value, VM};
+use Instruction::*;
 
 #[test]
 fn push_const() {
     let mut vm = VM::new();
-    let result = vm.execute(vec![Bytecode {
-        op: Opcode::PushConst,
-        args: vec![Value::Nil(())],
-    }]);
+    let bc = Bytecode::new(vec![PushConst(Value::Nil(()))]);
+
+    let result = vm.execute(bc);
 
     match result {
         Ok(_) => {}
