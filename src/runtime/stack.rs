@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
-use crate::runtime::{ObjectPtr, StackError};
+use crate::runtime::StackError;
+use crate::types::ObjectPtr;
 
 const STACK_SIZE: usize = u8::MAX as usize;
 

@@ -1,4 +1,6 @@
-use crate::runtime::{Bytecode, Instruction, Object, VM};
+use crate::runtime::{Bytecode, Instruction, VM};
+use crate::types::Object;
+
 use Instruction::*;
 
 #[test]

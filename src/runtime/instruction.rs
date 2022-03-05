@@ -1,6 +1,7 @@
 use strum::IntoStaticStr;
 
-use crate::runtime::{Bytecode, ObjectPtr, Stack, StackError, VMError, VMResult};
+use crate::runtime::{Bytecode, Stack, StackError, VMError, VMResult};
+use crate::types::ObjectPtr;
 
 use Instruction::*;
 
