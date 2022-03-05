@@ -4,8 +4,8 @@ pub type Str = String;
 pub struct StrType;
 
 impl Type<Str> for StrType {
-    fn add(v: Str, w: ObjectPtr) -> TypeResult {
-        match &*w.borrow_mut() {
+    fn add(v: &mut Str, w: ObjectPtr) -> TypeResult {
+        match &*w.borrow() {
             Object::Str(s) => {
                 let mut cv = v.clone();
                 cv.push_str(&s);

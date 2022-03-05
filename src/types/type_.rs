@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 use crate::types::ObjectPtr;
 
 pub enum TypeError {
@@ -9,8 +11,7 @@ pub type TypeResult = Result<ObjectPtr, TypeError>;
 macro_rules! binop {
     ($($name:ident),* $(,)?) => {
         $(
-            #[allow(unused_variables)]
-            fn $name(v: T, w: ObjectPtr) -> TypeResult {
+            fn $name(v: &mut T, w: ObjectPtr) -> TypeResult {
                 Err(TypeError::Unimplemented)
             }
         )*
@@ -20,15 +21,19 @@ macro_rules! binop {
 macro_rules! unop {
     ($($name:ident),* $(,)?) => {
         $(
-            #[allow(unused_variables)]
-            fn $name(v: T) -> TypeResult {
+            fn $name(v: &mut T) -> TypeResult {
                 Err(TypeError::Unimplemented)
             }
         )*
     };
 }
 
+#[allow(unused_variables)]
 pub trait Type<T> {
-    binop!(add, sub, mul, div, pow, iadd, isub, imul, idiv, ipow, eq, le, lt, ge, gt, ne, and, or);
+    binop!(add, sub, mul, div, pow, and, or);
     unop!(not);
+
+    fn cmp(v: &mut T, w: ObjectPtr) -> Option<Ordering> {
+        None
+    }
 }
