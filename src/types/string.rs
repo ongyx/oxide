@@ -1,17 +1,14 @@
-use crate::types::{Object, ObjectPtr, Type, TypeError, TypeResult};
+use crate::types::{Object, ObjectPtr, Type, TypeResult};
 
-pub type Str = String;
-pub struct StrType;
+pub struct StringType;
 
-impl Type<Str> for StrType {
-    fn add(v: &mut Str, w: ObjectPtr) -> TypeResult {
-        match &*w.borrow() {
-            Object::Str(s) => {
-                let mut cv = v.clone();
-                cv.push_str(&s);
-                Ok(Object::Str(cv).ptr())
-            }
-            _ => Err(TypeError::Unimplemented),
-        }
+impl Type for StringType {
+    fn add(&self, v: ObjectPtr, w: ObjectPtr) -> TypeResult<ObjectPtr> {
+        let mut v = v.borrow().string()?;
+        let w = w.borrow().string()?;
+
+        v.push_str(&w);
+
+        Ok(Object::from(v).ptr())
     }
 }

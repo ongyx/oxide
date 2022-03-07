@@ -1,39 +1,18 @@
-use std::cmp::Ordering;
-
+use crate::types::macros::{binop, unop};
 use crate::types::ObjectPtr;
 
 pub enum TypeError {
     Unimplemented,
 }
 
-pub type TypeResult = Result<ObjectPtr, TypeError>;
-
-macro_rules! binop {
-    ($($name:ident),* $(,)?) => {
-        $(
-            fn $name(v: &mut T, w: ObjectPtr) -> TypeResult {
-                Err(TypeError::Unimplemented)
-            }
-        )*
-    };
-}
-
-macro_rules! unop {
-    ($($name:ident),* $(,)?) => {
-        $(
-            fn $name(v: &mut T) -> TypeResult {
-                Err(TypeError::Unimplemented)
-            }
-        )*
-    };
-}
+pub type TypeResult<T> = Result<T, TypeError>;
 
 #[allow(unused_variables)]
-pub trait Type<T> {
+pub trait Type {
     binop!(add, sub, mul, div, pow, and, or);
     unop!(not);
+}
 
-    fn cmp(v: &mut T, w: ObjectPtr) -> Option<Ordering> {
-        None
-    }
+pub trait ObjectType {
+    fn type_() -> Box<dyn Type>;
 }

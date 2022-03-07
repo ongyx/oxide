@@ -1,35 +1,26 @@
-use std::cmp::Ordering;
-
-use crate::types::{Object, ObjectPtr, Type, TypeError, TypeResult};
-
-use Object::*;
+use crate::types::{Object, ObjectPtr, Type, TypeResult};
 
 pub type Boolean = bool;
 pub struct BooleanType;
 
-impl Type<Boolean> for BooleanType {
-    fn and(v: &mut Boolean, w: ObjectPtr) -> TypeResult {
-        match *w.borrow() {
-            Boolean(b) => Ok(Boolean(*v && b).ptr()),
-            _ => Err(TypeError::Unimplemented),
-        }
+impl Type for BooleanType {
+    fn and(&self, v: ObjectPtr, w: ObjectPtr) -> TypeResult<ObjectPtr> {
+        let v = v.borrow().boolean()?;
+        let w = w.borrow().boolean()?;
+
+        Ok(Object::from(v && w).ptr())
     }
 
-    fn or(v: &mut Boolean, w: ObjectPtr) -> TypeResult {
-        match *w.borrow() {
-            Boolean(b) => Ok(Boolean(*v || b).ptr()),
-            _ => Err(TypeError::Unimplemented),
-        }
+    fn or(&self, v: ObjectPtr, w: ObjectPtr) -> TypeResult<ObjectPtr> {
+        let v = v.borrow().boolean()?;
+        let w = w.borrow().boolean()?;
+
+        Ok(Object::from(v || w).ptr())
     }
 
-    fn not(v: &mut Boolean) -> TypeResult {
-        Ok(Boolean(!*v).ptr())
-    }
+    fn not(&self, v: ObjectPtr) -> TypeResult<ObjectPtr> {
+        let v = v.borrow().boolean()?;
 
-    fn cmp(v: &mut Boolean, w: ObjectPtr) -> Option<Ordering> {
-        match &*w.borrow() {
-            Boolean(b) => (*v).partial_cmp(b),
-            _ => None,
-        }
+        Ok(Object::from(v).ptr())
     }
 }
