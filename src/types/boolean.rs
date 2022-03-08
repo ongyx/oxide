@@ -1,9 +1,8 @@
 use crate::types::{Object, ObjectPtr, Type, TypeResult};
 
 pub type Boolean = bool;
-pub struct BooleanType;
 
-impl Type for BooleanType {
+impl Type for Boolean {
     fn and(&self, v: ObjectPtr, w: ObjectPtr) -> TypeResult<ObjectPtr> {
         let v = Boolean::try_from(&*v.borrow())?;
         let w = Boolean::try_from(&*w.borrow())?;

@@ -4,10 +4,15 @@ use Object::*;
 
 pub type Integer = i64;
 
-pub struct IntegerType;
+impl Type for Integer {
+    arith_impl!(
+        Integer;
 
-impl Type for IntegerType {
-    arith_impl!(Integer);
+        add: +,
+        sub: -,
+        mul: *,
+        div: /
+    );
 
     fn pow(&self, v: ObjectPtr, w: ObjectPtr) -> TypeResult<ObjectPtr> {
         let v = Integer::try_from(&*v.borrow())?;

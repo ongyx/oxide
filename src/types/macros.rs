@@ -19,35 +19,48 @@ macro_rules! unop {
 }
 
 macro_rules! arith_impl {
-    ($type:ident) => {
-        fn add(&self, v: ObjectPtr, w: ObjectPtr) -> TypeResult<ObjectPtr> {
-            let v = $type::try_from(&*v.borrow())?;
-            let w = $type::try_from(&*w.borrow())?;
+    ($type:ident; $($name:ident: $op:tt),+) => {
+        $(
+            fn $name(&self, v: ObjectPtr, w: ObjectPtr) -> TypeResult<ObjectPtr> {
+                match (&*v.borrow(), &*w.borrow()) {
+                    (Integer(vi), Float(wf)) => Ok(Object::from(*vi as f64 $op *wf).ptr()),
+                    (Float(vf), Integer(wi)) => Ok(Object::from(*vf $op *wi as f64).ptr()),
+                    (v @ _, w @ _) => {
+                        let v = $type::try_from(v)?;
+                        let w = $type::try_from(w)?;
 
-            Ok(Object::from(v + w).ptr())
-        }
-
-        fn sub(&self, v: ObjectPtr, w: ObjectPtr) -> TypeResult<ObjectPtr> {
-            let v = $type::try_from(&*v.borrow())?;
-            let w = $type::try_from(&*w.borrow())?;
-
-            Ok(Object::from(v - w).ptr())
-        }
-
-        fn mul(&self, v: ObjectPtr, w: ObjectPtr) -> TypeResult<ObjectPtr> {
-            let v = $type::try_from(&*v.borrow())?;
-            let w = $type::try_from(&*w.borrow())?;
-
-            Ok(Object::from(v * w).ptr())
-        }
-
-        fn div(&self, v: ObjectPtr, w: ObjectPtr) -> TypeResult<ObjectPtr> {
-            let v = $type::try_from(&*v.borrow())?;
-            let w = $type::try_from(&*w.borrow())?;
-
-            Ok(Object::from(v / w).ptr())
-        }
+                        Ok(Object::from(v $op w).ptr())
+                    }
+                }
+            }
+        )+
     };
 }
 
-pub(crate) use {arith_impl, binop, unop};
+macro_rules! object_to_impl {
+    ($name:ident; $($type:ty: $body:expr),+) => {
+        $(
+            impl TryFrom<&Object> for $type {
+                type Error = TypeError;
+
+                fn try_from($name: &Object) -> Result<Self, Self::Error> {
+                    $body
+                }
+            }
+        )*
+    };
+}
+
+macro_rules! object_from_impl {
+    ($($variant:ident),+) => {
+        $(
+            impl From<$variant> for Object {
+                fn from(v: $variant) -> Self {
+                    Self::$variant(v)
+                }
+            }
+        )*
+    };
+}
+
+pub(crate) use {arith_impl, binop, object_from_impl, object_to_impl, unop};

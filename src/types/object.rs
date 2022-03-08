@@ -2,7 +2,8 @@ use std::cell::{Ref, RefCell, RefMut};
 use std::collections::HashMap;
 use std::rc::Rc;
 
-use crate::types::{Boolean, Float, Integer, Nil, TypeError};
+use crate::types::macros::{object_from_impl, object_to_impl};
+use crate::types::{Boolean, Float, Integer, Native, Nil, TypeError};
 
 /// A reference-counted pointer to a VM object.
 /// This allows objects to be moved around by cloning the pointer (i.e onto the eval stack).
@@ -24,7 +25,7 @@ impl ObjectPtr {
 }
 
 /// A VM object.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub enum Object {
     Boolean(Boolean),
     Float(Float),
@@ -33,7 +34,7 @@ pub enum Object {
     String(String),
     Array(Vec<ObjectPtr>),
     Struct(HashMap<Object, ObjectPtr>),
-    // Native(Native),
+    Native(Native),
 }
 
 impl Object {
@@ -41,20 +42,6 @@ impl Object {
     pub fn ptr(self) -> ObjectPtr {
         ObjectPtr::new(self)
     }
-}
-
-macro_rules! object_to_impl {
-    ($name:ident; $($type:ty: $body:expr),+) => {
-        $(
-            impl TryFrom<&Object> for $type {
-                type Error = TypeError;
-
-                fn try_from($name: &Object) -> Result<Self, Self::Error> {
-                    $body
-                }
-            }
-        )*
-    };
 }
 
 object_to_impl!(
@@ -86,17 +73,5 @@ object_to_impl!(
         _ => Err(TypeError::Unimplemented),
     }
 );
-
-macro_rules! object_from_impl {
-    ($($variant:ident),+) => {
-        $(
-            impl From<$variant> for Object {
-                fn from(v: $variant) -> Self {
-                    Self::$variant(v)
-                }
-            }
-        )*
-    };
-}
 
 object_from_impl!(Boolean, Float, Integer, Nil, String);

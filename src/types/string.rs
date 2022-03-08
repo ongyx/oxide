@@ -1,8 +1,6 @@
 use crate::types::{Object, ObjectPtr, Type, TypeResult};
 
-pub struct StringType;
-
-impl Type for StringType {
+impl Type for String {
     fn add(&self, v: ObjectPtr, w: ObjectPtr) -> TypeResult<ObjectPtr> {
         let mut v = String::try_from(&*v.borrow())?;
         let w = String::try_from(&*w.borrow())?;

@@ -4,10 +4,15 @@ use Object::*;
 
 pub type Float = f64;
 
-pub struct FloatType;
+impl Type for Float {
+    arith_impl!(
+        Float;
 
-impl Type for FloatType {
-    arith_impl!(Float);
+        add: +,
+        sub: -,
+        mul: *,
+        div: /
+    );
 
     fn pow(&self, v: ObjectPtr, w: ObjectPtr) -> TypeResult<ObjectPtr> {
         let v = Float::try_from(&*v.borrow())?;
