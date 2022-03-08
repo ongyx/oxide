@@ -60,6 +60,12 @@ macro_rules! object_from_impl {
                 }
             }
         )*
+        // special variant for &str
+        impl From<&str> for Object {
+            fn from(v: &str) -> Self {
+                Self::String(v.into())
+            }
+        }
     };
 }
 
