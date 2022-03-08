@@ -4,8 +4,8 @@ pub struct StringType;
 
 impl Type for StringType {
     fn add(&self, v: ObjectPtr, w: ObjectPtr) -> TypeResult<ObjectPtr> {
-        let mut v = v.borrow().string()?;
-        let w = w.borrow().string()?;
+        let mut v = String::try_from(&*v.borrow())?;
+        let w = String::try_from(&*w.borrow())?;
 
         v.push_str(&w);
 

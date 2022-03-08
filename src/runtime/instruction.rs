@@ -51,32 +51,33 @@ pub enum Instruction {
 
 impl Instruction {
     pub fn run(&self, bc: &Bytecode, stack: &mut Stack) -> VMResult {
-        let frame = stack.current_frame()?;
+        let (global, local) = stack.frames()?;
+        let local = local.unwrap_or(global);
 
         match self {
             PushConst(value) => {
-                frame.eval.push(value.clone());
+                local.eval.push(value.clone());
                 Ok(())
             }
             Pop => {
-                frame.eval.pop().ok_or(StackError::EvalEnd)?;
+                local.eval.pop().ok_or(StackError::EvalEnd)?;
                 Ok(())
             }
             Load(idx) => {
                 let name = &bc.locals[*idx];
-                let value = frame
-                    .vars
-                    .get(name)
-                    .ok_or_else(|| VMError::Undefined(name.to_owned()))?;
-                frame.eval.push(value.clone());
+                let value = local.get(name)?;
+                local.eval.push(value);
+                Ok(())
+            }
+            LoadGlobal(s) => {
+                let value = global.get(s)?;
+                global.eval.push(value);
                 Ok(())
             }
             Store(idx) => {
-                let name = &bc.locals[*idx];
-                frame.vars.insert(
-                    name.to_owned(),
-                    frame.eval.pop().ok_or(StackError::EvalEnd)?,
-                );
+                let name = bc.locals[*idx].to_owned();
+                let value = local.eval.pop().ok_or(StackError::EvalEnd)?;
+                local.set(name, &value);
                 Ok(())
             }
             _ => Err(VMError::Unimplemented),

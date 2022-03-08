@@ -1,7 +1,6 @@
 #[derive(Debug)]
 pub enum VMError {
     Unimplemented,
-    Undefined(String),
     Stack(StackError),
 }
 
@@ -17,4 +16,5 @@ pub type VMResult = Result<(), VMError>;
 pub enum StackError {
     End,
     EvalEnd,
+    Undefined(String),
 }

@@ -1,4 +1,4 @@
-use crate::runtime::{Bytecode, Instruction, VM};
+use crate::runtime::{Bytecode, Frame, Instruction, VM};
 use crate::types::Object;
 
 use Instruction::*;
@@ -8,15 +8,21 @@ fn push_const() {
     let mut vm = VM::new();
     let bc = Bytecode::new(vec![PushConst(Object::Nil(()).ptr())]);
 
-    let result = vm.execute(bc);
+    vm.execute(bc).unwrap();
 
-    match result {
-        Ok(_) => {}
-        Err(e) => panic!("{:?}", e),
-    }
-
-    let frame = vm.stack.current_frame().expect("no global stack frame");
+    let frame = vm.stack.frames().unwrap().0;
 
     println!("{:?}", frame.eval);
-    assert!(matches!(*frame.eval[0].borrow_mut(), Object::Nil(_)))
+    assert!(matches!(*frame.eval[0].borrow_mut(), Object::Nil(_)));
+}
+
+#[test]
+fn frames() {
+    let mut vm = VM::new();
+    vm.stack.push(Frame::new());
+
+    let (_, local) = vm.stack.frames().unwrap();
+
+    assert!(!local.is_none());
+    assert!(vm.stack.len() == 2);
 }

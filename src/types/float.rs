@@ -7,16 +7,16 @@ pub type Float = f64;
 pub struct FloatType;
 
 impl Type for FloatType {
-    arith_impl!(float);
+    arith_impl!(Float);
 
     fn pow(&self, v: ObjectPtr, w: ObjectPtr) -> TypeResult<ObjectPtr> {
-        let v = v.borrow().float()?;
-        let w = w.borrow();
+        let v = Float::try_from(&*v.borrow())?;
+        let w = &*w.borrow();
 
         if let Integer(i) = &*w {
             Ok(Object::from(v.powi(*i as i32)).ptr())
         } else {
-            Ok(Object::from(v.powf(w.float()?)).ptr())
+            Ok(Object::from(v.powf(Float::try_from(w)?)).ptr())
         }
     }
 }

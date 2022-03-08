@@ -21,29 +21,29 @@ macro_rules! unop {
 macro_rules! arith_impl {
     ($type:ident) => {
         fn add(&self, v: ObjectPtr, w: ObjectPtr) -> TypeResult<ObjectPtr> {
-            let v = v.borrow().$type()?;
-            let w = w.borrow().$type()?;
+            let v = $type::try_from(&*v.borrow())?;
+            let w = $type::try_from(&*w.borrow())?;
 
             Ok(Object::from(v + w).ptr())
         }
 
         fn sub(&self, v: ObjectPtr, w: ObjectPtr) -> TypeResult<ObjectPtr> {
-            let v = v.borrow().$type()?;
-            let w = w.borrow().$type()?;
+            let v = $type::try_from(&*v.borrow())?;
+            let w = $type::try_from(&*w.borrow())?;
 
             Ok(Object::from(v - w).ptr())
         }
 
         fn mul(&self, v: ObjectPtr, w: ObjectPtr) -> TypeResult<ObjectPtr> {
-            let v = v.borrow().$type()?;
-            let w = w.borrow().$type()?;
+            let v = $type::try_from(&*v.borrow())?;
+            let w = $type::try_from(&*w.borrow())?;
 
             Ok(Object::from(v * w).ptr())
         }
 
         fn div(&self, v: ObjectPtr, w: ObjectPtr) -> TypeResult<ObjectPtr> {
-            let v = v.borrow().$type()?;
-            let w = w.borrow().$type()?;
+            let v = $type::try_from(&*v.borrow())?;
+            let w = $type::try_from(&*w.borrow())?;
 
             Ok(Object::from(v / w).ptr())
         }

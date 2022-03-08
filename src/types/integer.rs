@@ -1,5 +1,5 @@
 use crate::types::macros::arith_impl;
-use crate::types::{Object, ObjectPtr, Type, TypeResult};
+use crate::types::{Float, Object, ObjectPtr, Type, TypeResult};
 use Object::*;
 
 pub type Integer = i64;
@@ -7,11 +7,11 @@ pub type Integer = i64;
 pub struct IntegerType;
 
 impl Type for IntegerType {
-    arith_impl!(integer);
+    arith_impl!(Integer);
 
     fn pow(&self, v: ObjectPtr, w: ObjectPtr) -> TypeResult<ObjectPtr> {
-        let v = v.borrow().integer()?;
-        let w = w.borrow();
+        let v = Integer::try_from(&*v.borrow())?;
+        let w = &*w.borrow();
 
         if let Integer(i) = &*w {
             let o = if *i >= 0 {
@@ -22,7 +22,7 @@ impl Type for IntegerType {
 
             Ok(o.ptr())
         } else {
-            Ok(Object::from((v as f64).powf(w.float()?)).ptr())
+            Ok(Object::from((v as f64).powf(Float::try_from(w)?)).ptr())
         }
     }
 }
