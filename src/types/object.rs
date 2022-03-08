@@ -1,9 +1,8 @@
 use std::cell::{Ref, RefCell, RefMut};
-use std::collections::HashMap;
 use std::rc::Rc;
 
-use crate::types::macros::{object_from_impl, object_to_impl};
-use crate::types::{Boolean, Float, Integer, Native, Nil, TypeError};
+use crate::types::macros::{object_from_impl, object_to_impl, object_type};
+use crate::types::*;
 
 /// A reference-counted pointer to a VM object.
 /// This allows objects to be moved around by cloning the pointer (i.e onto the eval stack).
@@ -25,6 +24,7 @@ impl ObjectPtr {
 }
 
 /// A VM object.
+/// This directly owns the underlying value.
 #[derive(Debug)]
 pub enum Object {
     Boolean(Boolean),
@@ -32,8 +32,8 @@ pub enum Object {
     Integer(Integer),
     Nil(Nil),
     String(String),
-    Array(Vec<ObjectPtr>),
-    Struct(HashMap<Object, ObjectPtr>),
+    Array(Array),
+    Struct(Struct),
     Native(Native),
 }
 
@@ -42,6 +42,10 @@ impl Object {
     pub fn ptr(self) -> ObjectPtr {
         ObjectPtr::new(self)
     }
+
+    pub fn type_(&self) -> &dyn Type {
+        object_type!(self; Boolean, Float, Integer, Nil, String, Array, Struct)
+    }
 }
 
 object_to_impl!(
@@ -49,19 +53,19 @@ object_to_impl!(
 
     Boolean: match *value {
         Object::Boolean(b) => Ok(b),
-        _ => Err(TypeError::Unimplemented),
+        _ => Err(TypeError::Undefined),
     },
 
     Float: match *value {
         Object::Float(f) => Ok(f),
         Object::Integer(i) => Ok(i as Float),
-        _ => Err(TypeError::Unimplemented),
+        _ => Err(TypeError::Undefined),
     },
 
     Integer: match *value {
         Object::Float(f) => Ok(f as i64),
         Object::Integer(i) => Ok(i),
-        _ => Err(TypeError::Unimplemented),
+        _ => Err(TypeError::Undefined),
     },
 
     String: match value {
@@ -70,7 +74,7 @@ object_to_impl!(
         Object::Integer(i) => Ok(i.to_string()),
         Object::Nil(_) => Ok("nil".to_owned()),
         Object::String(s) => Ok(s.to_owned()),
-        _ => Err(TypeError::Unimplemented),
+        _ => Err(TypeError::Undefined),
     }
 );
 

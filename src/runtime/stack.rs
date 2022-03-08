@@ -33,7 +33,7 @@ impl Frame {
 
     /// Set a ObjectPtr to a variable.
     /// This clones the ObjectPtr, so the reference count is incremented.
-    pub fn set(&mut self, name: String, object: &ObjectPtr) {
+    pub fn set(&mut self, name: String, object: ObjectPtr) {
         self.vars.insert(name, object.clone());
     }
 
@@ -44,6 +44,14 @@ impl Frame {
             Some(_) => Ok(()),
             None => Err(StackError::Undefined(name.to_owned())),
         }
+    }
+
+    pub fn push(&mut self, o: ObjectPtr) {
+        self.eval.push(o);
+    }
+
+    pub fn pop(&mut self) -> Result<ObjectPtr, StackError> {
+        self.eval.pop().ok_or(StackError::EvalEnd)
     }
 }
 

@@ -1,4 +1,4 @@
 use crate::types::Type;
 
-/// A wrapper around a native Rust type.
-pub type Native = Box<dyn Type>;
+#[derive(Debug)]
+pub struct Native(pub &'static dyn Type);

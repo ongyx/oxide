@@ -17,6 +17,26 @@ fn push_const() {
 }
 
 #[test]
+fn add() {
+    let mut vm = VM::new();
+    let bc = Bytecode::new(vec![
+        PushConst(Object::from(1).ptr()),
+        PushConst(Object::from(2).ptr()),
+        Add,
+    ]);
+
+    vm.execute(bc).unwrap();
+
+    let frame = vm.stack.frames().unwrap().0;
+
+    if let Object::Integer(i) = *frame.eval[0].borrow() {
+        assert!(i == 3)
+    } else {
+        panic!("not an integer")
+    };
+}
+
+#[test]
 fn frames() {
     let mut vm = VM::new();
     vm.stack.push(Frame::new());

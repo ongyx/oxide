@@ -6,6 +6,7 @@ use crate::types::ObjectPtr;
 #[derive(Debug)]
 pub enum TypeError {
     Unimplemented,
+    Undefined,
 }
 
 pub type TypeResult<T> = Result<T, TypeError>;

@@ -1,6 +1,6 @@
 use strum::IntoStaticStr;
 
-use crate::runtime::{Bytecode, Stack, StackError, VMError, VMResult};
+use crate::runtime::{Bytecode, Stack, VMError, VMResult};
 use crate::types::ObjectPtr;
 
 use Instruction::*;
@@ -56,31 +56,39 @@ impl Instruction {
 
         match self {
             PushConst(value) => {
-                local.eval.push(value.clone());
-                Ok(())
+                local.push(value.clone());
             }
             Pop => {
-                local.eval.pop().ok_or(StackError::EvalEnd)?;
-                Ok(())
+                local.pop()?;
             }
             Load(idx) => {
-                let name = &bc.locals[*idx];
-                let value = local.get(name)?;
-                local.eval.push(value);
-                Ok(())
+                local.push(local.get(&bc.locals[*idx])?);
             }
-            LoadGlobal(s) => {
-                let value = global.get(s)?;
-                global.eval.push(value);
-                Ok(())
-            }
+            LoadGlobal(s) => global.eval.push(global.get(s)?),
             Store(idx) => {
-                let name = bc.locals[*idx].to_owned();
-                let value = local.eval.pop().ok_or(StackError::EvalEnd)?;
-                local.set(name, &value);
-                Ok(())
+                let o = local.pop()?;
+                local.set(bc.locals[*idx].to_owned(), o);
             }
-            _ => Err(VMError::Unimplemented),
-        }
+            StoreGlobal(s) => {
+                let o = global.pop()?;
+                global.set(s.to_owned(), o);
+            }
+            Delete(idx) => {
+                local.delete(&bc.locals[*idx])?;
+            }
+            DeleteGlobal(s) => {
+                global.delete(s)?;
+            }
+            Add => {
+                let rhs = local.pop()?;
+                let lhs = local.pop()?;
+
+                let v = lhs.borrow().type_().add(lhs.clone(), rhs.clone())?;
+                local.push(v);
+            }
+            _ => return Err(VMError::Unimplemented),
+        };
+
+        Ok(())
     }
 }
