@@ -1,3 +1,4 @@
+use crate::ovec;
 use crate::runtime::{Bytecode, Frame, Instruction, VM};
 use crate::types::{Nil, Object};
 
@@ -10,7 +11,9 @@ fn local_frame(vm: &mut VM) -> &mut Frame {
 #[test]
 fn push_const() {
     let mut vm = VM::new();
-    let bc = Bytecode::new(vec![PushConst(Object::from(Nil).ptr())]);
+    let mut bc = Bytecode::new(vec![PushConst(0)]);
+
+    bc.consts = ovec![Nil];
 
     vm.execute(bc).unwrap();
 
@@ -23,13 +26,10 @@ fn push_const() {
 #[test]
 fn load_store() {
     let mut vm = VM::new();
-    let mut bc = Bytecode::new(vec![
-        PushConst(Object::from("Hello World!").ptr()),
-        Store(0),
-        Load(0),
-    ]);
+    let mut bc = Bytecode::new(vec![PushConst(0), Store(0), Load(0)]);
 
     bc.locals = vec!["test"].iter().map(|&s| s.into()).collect();
+    bc.consts = ovec!["Hello World!"];
 
     vm.execute(bc).unwrap();
 
@@ -45,11 +45,13 @@ fn load_store() {
 #[test]
 fn global_load_store() {
     let mut vm = VM::new();
-    let bc = Bytecode::new(vec![
-        PushConst(Object::from(String::from("Hello World!")).ptr()),
+    let mut bc = Bytecode::new(vec![
+        PushConst(0),
         StoreGlobal("test".into()),
         LoadGlobal("test".into()),
     ]);
+
+    bc.consts = ovec!["Hello World!"];
 
     vm.execute(bc).unwrap();
 
@@ -65,11 +67,9 @@ fn global_load_store() {
 #[test]
 fn add() {
     let mut vm = VM::new();
-    let bc = Bytecode::new(vec![
-        PushConst(Object::from(1).ptr()),
-        PushConst(Object::from(2).ptr()),
-        Add,
-    ]);
+    let mut bc = Bytecode::new(vec![PushConst(0), PushConst(1), Add]);
+
+    bc.consts = ovec![1, 2];
 
     vm.execute(bc).unwrap();
 
@@ -79,6 +79,24 @@ fn add() {
         assert!(i == 3)
     } else {
         panic!("not an integer")
+    };
+}
+
+#[test]
+fn and() {
+    let mut vm = VM::new();
+    let mut bc = Bytecode::new(vec![PushConst(0), PushConst(1), And]);
+
+    bc.consts = ovec![true, false];
+
+    vm.execute(bc).unwrap();
+
+    let frame = local_frame(&mut vm);
+
+    if let Object::Boolean(b) = *frame.eval[0].borrow() {
+        assert!(!b)
+    } else {
+        panic!("not a boolean")
     };
 }
 

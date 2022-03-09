@@ -1,7 +1,8 @@
 use strum::IntoStaticStr;
 
+use crate::runtime::macros::{type_binop, type_fn, type_unop};
 use crate::runtime::{Bytecode, Stack, VMError, VMResult};
-use crate::types::ObjectPtr;
+use crate::types::{CmpOp, TypeError};
 
 use Instruction::*;
 
@@ -10,7 +11,7 @@ use Instruction::*;
 #[strum(serialize_all = "snake_case")]
 pub enum Instruction {
     // stack
-    PushConst(ObjectPtr),
+    PushConst(usize),
     Pop,
     Load(usize),
     LoadGlobal(String),
@@ -25,17 +26,7 @@ pub enum Instruction {
     Mul,
     Div,
     Pow,
-    IAdd,
-    ISub,
-    IMul,
-    IDiv,
-    IPow,
-    Eq,
-    Le,
-    Lt,
-    Ge,
-    Gt,
-    Ne,
+    Cmp(CmpOp),
     And,
     Or,
     Not,
@@ -55,8 +46,8 @@ impl Instruction {
         let local = local.unwrap_or(global);
 
         match self {
-            PushConst(value) => {
-                local.push(value.clone());
+            PushConst(idx) => {
+                local.push(bc.consts[*idx].clone());
             }
             Pop => {
                 local.pop()?;
@@ -79,13 +70,21 @@ impl Instruction {
             DeleteGlobal(s) => {
                 global.delete(s)?;
             }
-            Add => {
+            Add => type_binop!(local, add),
+            Sub => type_binop!(local, sub),
+            Mul => type_binop!(local, mul),
+            Div => type_binop!(local, div),
+            Pow => type_binop!(local, pow),
+            Cmp(op) => {
                 let rhs = local.pop()?;
                 let lhs = local.pop()?;
 
-                let v = lhs.type_.add(lhs.clone(), rhs.clone())?;
-                local.push(v);
+                let cmp_fn = type_fn!(cmp(lhs, rhs))?;
+                local.push(cmp_fn(lhs, rhs, *op)?);
             }
+            And => type_binop!(local, and),
+            Or => type_binop!(local, or),
+            Not => type_unop!(local, not),
             _ => return Err(VMError::Unimplemented),
         };
 

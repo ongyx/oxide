@@ -1,6 +1,7 @@
 mod bytecode;
 mod error;
 mod instruction;
+mod macros;
 mod stack;
 mod vm;
 

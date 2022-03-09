@@ -1,39 +1,17 @@
-macro_rules! binop {
-    ($($name:ident),* $(,)?) => {
-        $(
-            fn $name(&self, v: ObjectPtr, w: ObjectPtr) -> TypeResult<ObjectPtr> {
-                Err(TypeError::Unimplemented)
-            }
-        )*
-    };
-}
+macro_rules! arith {
+    ($type:ident, $op:tt) => {
+        Some(|v, w| {
+            match (&*v.borrow(), &*w.borrow()) {
+                (Integer(vi), Float(wf)) => Ok(Object::from(*vi as f64 $op *wf).ptr()),
+                (Float(vf), Integer(wi)) => Ok(Object::from(*vf $op *wi as f64).ptr()),
+                (v @ _, w @ _) => {
+                    let v = $type::try_from(v)?;
+                    let w = $type::try_from(w)?;
 
-macro_rules! unop {
-    ($($name:ident),* $(,)?) => {
-        $(
-            fn $name(&self, v: ObjectPtr) -> TypeResult<ObjectPtr> {
-                Err(TypeError::Unimplemented)
-            }
-        )*
-    };
-}
-
-macro_rules! arith_impl {
-    ($type:ident; $($name:ident: $op:tt),+) => {
-        $(
-            fn $name(&self, v: ObjectPtr, w: ObjectPtr) -> TypeResult<ObjectPtr> {
-                match (&*v.borrow(), &*w.borrow()) {
-                    (Integer(vi), Float(wf)) => Ok(Object::from(*vi as f64 $op *wf).ptr()),
-                    (Float(vf), Integer(wi)) => Ok(Object::from(*vf $op *wi as f64).ptr()),
-                    (v @ _, w @ _) => {
-                        let v = $type::try_from(v)?;
-                        let w = $type::try_from(w)?;
-
-                        Ok(Object::from(v $op w).ptr())
-                    }
+                    Ok(Object::from(v $op w).ptr())
                 }
             }
-        )+
+        })
     };
 }
 
@@ -69,4 +47,4 @@ macro_rules! object_from_impl {
     };
 }
 
-pub(crate) use {arith_impl, binop, object_from_impl, object_to_impl, unop};
+pub(crate) use {arith, object_from_impl, object_to_impl};

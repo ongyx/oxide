@@ -1,33 +1,37 @@
-use crate::types::macros::arith_impl;
-use crate::types::{Object, ObjectPtr, Type, TypeResult};
+use lazy_static::lazy_static;
+
+use crate::types::macros::arith;
+use crate::types::{Object, Type};
 use Object::*;
 
 pub type Float = f64;
 
-pub struct FloatType;
+macro_rules! arith_f {
+    ($op:tt) => {
+        arith!(Float, $op)
+    };
+}
 
-impl Type for FloatType {
-    fn name(&self) -> &'static str {
-        "float"
-    }
+lazy_static! {
+    pub static ref FloatType: Type = Type {
+        name: "float",
 
-    arith_impl!(
-        Float;
+        add: arith_f!(+),
+        sub: arith_f!(-),
+        mul: arith_f!(*),
+        div: arith_f!(/),
 
-        add: +,
-        sub: -,
-        mul: *,
-        div: /
-    );
+        pow: Some(|v, w| {
+            let v = Float::try_from(&*v.borrow())?;
+            let w = &*w.borrow();
 
-    fn pow(&self, v: ObjectPtr, w: ObjectPtr) -> TypeResult<ObjectPtr> {
-        let v = Float::try_from(&*v.borrow())?;
-        let w = &*w.borrow();
+            if let Integer(i) = &*w {
+                Ok(Object::from(v.powi(*i as i32)).ptr())
+            } else {
+                Ok(Object::from(v.powf(Float::try_from(w)?)).ptr())
+            }
+        }),
 
-        if let Integer(i) = &*w {
-            Ok(Object::from(v.powi(*i as i32)).ptr())
-        } else {
-            Ok(Object::from(v.powf(Float::try_from(w)?)).ptr())
-        }
-    }
+        ..Default::default()
+    };
 }

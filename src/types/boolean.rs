@@ -1,31 +1,31 @@
-use crate::types::{Object, ObjectPtr, Type, TypeResult};
+use lazy_static::lazy_static;
+
+use crate::types::{Object, Type};
 
 pub type Boolean = bool;
 
-pub struct BooleanType;
+lazy_static! {
+    pub static ref BooleanType: Type = Type {
+        name: "bool",
 
-impl Type for BooleanType {
-    fn name(&self) -> &'static str {
-        "bool"
-    }
+        and: Some(|v, w| {
+            let v = Boolean::try_from(&*v.borrow())?;
+            let w = Boolean::try_from(&*w.borrow())?;
 
-    fn and(&self, v: ObjectPtr, w: ObjectPtr) -> TypeResult<ObjectPtr> {
-        let v = Boolean::try_from(&*v.borrow())?;
-        let w = Boolean::try_from(&*w.borrow())?;
+            Ok(Object::from(v && w).ptr())
+        }),
+        or: Some(|v, w| {
+            let v = Boolean::try_from(&*v.borrow())?;
+            let w = Boolean::try_from(&*w.borrow())?;
 
-        Ok(Object::from(v && w).ptr())
-    }
+            Ok(Object::from(v || w).ptr())
+        }),
+        not: Some(|v| {
+            let v = Boolean::try_from(&*v.borrow())?;
 
-    fn or(&self, v: ObjectPtr, w: ObjectPtr) -> TypeResult<ObjectPtr> {
-        let v = Boolean::try_from(&*v.borrow())?;
-        let w = Boolean::try_from(&*w.borrow())?;
+            Ok(Object::from(!v).ptr())
+        }),
 
-        Ok(Object::from(v || w).ptr())
-    }
-
-    fn not(&self, v: ObjectPtr) -> TypeResult<ObjectPtr> {
-        let v = Boolean::try_from(&*v.borrow())?;
-
-        Ok(Object::from(!v).ptr())
-    }
+        ..Default::default()
+    };
 }

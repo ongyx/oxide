@@ -1,12 +1,14 @@
+use lazy_static::lazy_static;
+
 use crate::types::Type;
 
 #[derive(Debug)]
 pub struct Nil;
 
-pub struct NilType;
+lazy_static! {
+    pub static ref NilType: Type = Type {
+        name: "nil",
 
-impl Type for NilType {
-    fn name(&self) -> &'static str {
-        "nil"
-    }
+        ..Default::default()
+    };
 }

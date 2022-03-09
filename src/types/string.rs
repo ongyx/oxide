@@ -1,18 +1,20 @@
-use crate::types::{Object, ObjectPtr, Type, TypeResult};
+use lazy_static::lazy_static;
 
-pub struct StringType;
+use crate::types::{Object, Type};
 
-impl Type for StringType {
-    fn name(&self) -> &'static str {
-        "str"
-    }
+lazy_static! {
+    pub static ref StringType: Type = Type {
+        name: "str",
 
-    fn add(&self, v: ObjectPtr, w: ObjectPtr) -> TypeResult<ObjectPtr> {
-        let mut v = String::try_from(&*v.borrow())?;
-        let w = String::try_from(&*w.borrow())?;
+        add: Some(|v, w| {
+            let mut v = String::try_from(&*v.borrow())?;
+            let w = String::try_from(&*w.borrow())?;
 
-        v.push_str(&w);
+            v.push_str(&w);
 
-        Ok(Object::from(v).ptr())
-    }
+            Ok(Object::from(v).ptr())
+        }),
+
+        ..Default::default()
+    };
 }

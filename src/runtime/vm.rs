@@ -10,6 +10,7 @@ impl VM {
             stack: Stack::new(),
         }
     }
+
     pub fn execute(&mut self, bc: Bytecode) -> VMResult {
         bc.execute(&mut self.stack)?;
         Ok(())

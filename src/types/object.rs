@@ -10,14 +10,14 @@ use crate::types::*;
 #[derive(Clone)]
 pub struct ObjectPtr {
     object: Rc<RefCell<Object>>,
-    pub type_: &'static dyn Type,
+    pub type_: &'static Type,
 }
 
 impl ObjectPtr {
-    fn new(o: Object, t: &'static dyn Type) -> Self {
+    fn new(o: Object, type_: &'static Type) -> Self {
         Self {
             object: Rc::new(RefCell::new(o)),
-            type_: t,
+            type_,
         }
     }
 
@@ -34,7 +34,7 @@ impl Debug for ObjectPtr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("ObjectPtr")
             .field("object", &self.object)
-            .field("type_", &self.type_.name())
+            .field("type_", &self.type_.name)
             .finish()
     }
 }
@@ -57,13 +57,13 @@ impl Object {
     /// Convert this object into a pointer.
     pub fn ptr(self) -> ObjectPtr {
         let type_ = match &self {
-            Self::Boolean(_) => &BooleanType as &dyn Type,
-            Self::Float(_) => &FloatType as &dyn Type,
-            Self::Integer(_) => &IntegerType as &dyn Type,
-            Self::Nil(_) => &NilType as &dyn Type,
-            Self::String(_) => &StringType as &dyn Type,
-            Self::Array(_) => &ArrayType as &dyn Type,
-            Self::Struct(_) => &StructType as &dyn Type,
+            Self::Boolean(_) => &*BooleanType,
+            Self::Float(_) => &*FloatType,
+            Self::Integer(_) => &*IntegerType,
+            Self::Nil(_) => &*NilType,
+            Self::String(_) => &*StringType,
+            Self::Array(_) => &*ArrayType,
+            Self::Struct(_) => &*StructType,
             Self::Native(t) => t.0,
         };
 

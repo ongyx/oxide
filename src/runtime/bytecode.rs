@@ -1,4 +1,5 @@
 use crate::runtime::{Instruction, Stack, VMResult};
+use crate::types::ObjectPtr;
 
 /// A chunk of executable instructions.
 pub struct Bytecode {
@@ -6,6 +7,8 @@ pub struct Bytecode {
     pub code: Vec<Instruction>,
     /// Local variable names.
     pub locals: Vec<String>,
+    /// Constants.
+    pub consts: Vec<ObjectPtr>,
 }
 
 impl Bytecode {
@@ -13,6 +16,7 @@ impl Bytecode {
         Self {
             code,
             locals: Vec::new(),
+            consts: Vec::new(),
         }
     }
 

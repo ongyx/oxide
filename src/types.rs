@@ -22,4 +22,26 @@ pub use nil::{Nil, NilType};
 pub use object::{Object, ObjectPtr};
 pub use string::StringType;
 pub use struct_::{Struct, StructType};
-pub use type_::{Type, TypeError, TypeResult};
+pub use type_::{CmpOp, Type, TypeError, TypeResult};
+
+/// Create an ObjectPtr from a value.
+#[macro_export]
+macro_rules! obj {
+    ($x:expr) => {
+        Object::from($x).ptr()
+    };
+}
+
+/// Create a Vec of values, converted to ObjectPtr.
+#[macro_export]
+macro_rules! ovec {
+    () => {
+        vec![]
+    };
+    ($elem:expr; $n:expr) => {
+        vec![crate::obj!($elem), $n]
+    };
+    ($($x:expr),+ $(,)?) => {
+        vec![$(crate::obj!($x)),+]
+    };
+}

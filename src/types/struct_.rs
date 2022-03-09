@@ -1,13 +1,14 @@
 use std::collections::HashMap;
 
+use lazy_static::lazy_static;
+
 use crate::types::{ObjectPtr, Type};
 
 pub type Struct = HashMap<ObjectPtr, ObjectPtr>;
 
-pub struct StructType;
-
-impl Type for StructType {
-    fn name(&self) -> &'static str {
-        "struct"
-    }
+lazy_static! {
+    pub static ref StructType: Type = Type {
+        name: "struct",
+        ..Default::default()
+    };
 }

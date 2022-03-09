@@ -1,11 +1,12 @@
+use lazy_static::lazy_static;
+
 use crate::types::{ObjectPtr, Type};
 
 pub type Array = Vec<ObjectPtr>;
 
-pub struct ArrayType;
-
-impl Type for ArrayType {
-    fn name(&self) -> &'static str {
-        "array"
-    }
+lazy_static! {
+    pub static ref ArrayType: Type = Type {
+        name: "array",
+        ..Default::default()
+    };
 }
