@@ -1,4 +1,11 @@
+use std::fmt;
+
 use crate::types::Type;
 
-#[derive(Debug)]
 pub struct Native(pub &'static dyn Type);
+
+impl fmt::Debug for Native {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("Native").field(&self.0.name()).finish()
+    }
+}

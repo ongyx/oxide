@@ -83,7 +83,7 @@ impl Instruction {
                 let rhs = local.pop()?;
                 let lhs = local.pop()?;
 
-                let v = lhs.borrow().type_().add(lhs.clone(), rhs.clone())?;
+                let v = lhs.type_.add(lhs.clone(), rhs.clone())?;
                 local.push(v);
             }
             _ => return Err(VMError::Unimplemented),

@@ -4,7 +4,13 @@ use Object::*;
 
 pub type Integer = i64;
 
-impl Type for Integer {
+pub struct IntegerType;
+
+impl Type for IntegerType {
+    fn name(&self) -> &'static str {
+        "int"
+    }
+
     arith_impl!(
         Integer;
 

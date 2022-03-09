@@ -1,4 +1,4 @@
-use crate::types::{Object, Type};
+use crate::types::Object;
 
 #[test]
 fn integer_add() {
@@ -7,7 +7,7 @@ fn integer_add() {
     let ao = Object::from(a).ptr();
     let bo = Object::from(b).ptr();
 
-    let co = Type::add(&a, ao, bo).unwrap();
+    let co = ao.type_.add(ao, bo).unwrap();
 
     match &*co.borrow() {
         Object::Integer(i) => assert!(*i == 3),

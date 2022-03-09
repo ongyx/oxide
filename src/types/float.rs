@@ -4,7 +4,13 @@ use Object::*;
 
 pub type Float = f64;
 
-impl Type for Float {
+pub struct FloatType;
+
+impl Type for FloatType {
+    fn name(&self) -> &'static str {
+        "float"
+    }
+
     arith_impl!(
         Float;
 

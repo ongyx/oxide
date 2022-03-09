@@ -1,25 +1,41 @@
 use std::cell::{Ref, RefCell, RefMut};
+use std::fmt::Debug;
 use std::rc::Rc;
 
-use crate::types::macros::{object_from_impl, object_to_impl, object_type};
+use crate::types::macros::{object_from_impl, object_to_impl};
 use crate::types::*;
 
 /// A reference-counted pointer to a VM object.
 /// This allows objects to be moved around by cloning the pointer (i.e onto the eval stack).
-#[derive(Clone, Debug)]
-pub struct ObjectPtr(Rc<RefCell<Object>>);
+#[derive(Clone)]
+pub struct ObjectPtr {
+    object: Rc<RefCell<Object>>,
+    pub type_: &'static dyn Type,
+}
 
 impl ObjectPtr {
-    fn new(o: Object) -> Self {
-        Self(Rc::new(RefCell::new(o)))
+    fn new(o: Object, t: &'static dyn Type) -> Self {
+        Self {
+            object: Rc::new(RefCell::new(o)),
+            type_: t,
+        }
     }
 
     pub fn borrow(&self) -> Ref<'_, Object> {
-        self.0.borrow()
+        self.object.borrow()
     }
 
     pub fn borrow_mut(&self) -> RefMut<'_, Object> {
-        self.0.borrow_mut()
+        self.object.borrow_mut()
+    }
+}
+
+impl Debug for ObjectPtr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ObjectPtr")
+            .field("object", &self.object)
+            .field("type_", &self.type_.name())
+            .finish()
     }
 }
 
@@ -40,11 +56,18 @@ pub enum Object {
 impl Object {
     /// Convert this object into a pointer.
     pub fn ptr(self) -> ObjectPtr {
-        ObjectPtr::new(self)
-    }
+        let type_ = match &self {
+            Self::Boolean(_) => &BooleanType as &dyn Type,
+            Self::Float(_) => &FloatType as &dyn Type,
+            Self::Integer(_) => &IntegerType as &dyn Type,
+            Self::Nil(_) => &NilType as &dyn Type,
+            Self::String(_) => &StringType as &dyn Type,
+            Self::Array(_) => &ArrayType as &dyn Type,
+            Self::Struct(_) => &StructType as &dyn Type,
+            Self::Native(t) => t.0,
+        };
 
-    pub fn type_(&self) -> &dyn Type {
-        object_type!(self; Boolean, Float, Integer, Nil, String, Array, Struct)
+        ObjectPtr::new(self, type_)
     }
 }
 

@@ -4,4 +4,10 @@ use crate::types::{ObjectPtr, Type};
 
 pub type Struct = HashMap<ObjectPtr, ObjectPtr>;
 
-impl Type for Struct {}
+pub struct StructType;
+
+impl Type for StructType {
+    fn name(&self) -> &'static str {
+        "struct"
+    }
+}

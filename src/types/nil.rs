@@ -1,5 +1,12 @@
 use crate::types::Type;
 
-pub type Nil = ();
+#[derive(Debug)]
+pub struct Nil;
 
-impl Type for Nil {}
+pub struct NilType;
+
+impl Type for NilType {
+    fn name(&self) -> &'static str {
+        "nil"
+    }
+}

@@ -69,15 +69,4 @@ macro_rules! object_from_impl {
     };
 }
 
-macro_rules! object_type {
-    ($object:expr; $($type:ident),+) => {
-        match $object {
-            $(
-                Object::$type(v) => v as &dyn Type,
-            )+
-            Object::Native(v) => v.0,
-        }
-    };
-}
-
-pub(crate) use {arith_impl, binop, object_from_impl, object_to_impl, object_type, unop};
+pub(crate) use {arith_impl, binop, object_from_impl, object_to_impl, unop};

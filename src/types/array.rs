@@ -2,4 +2,10 @@ use crate::types::{ObjectPtr, Type};
 
 pub type Array = Vec<ObjectPtr>;
 
-impl Type for Array {}
+pub struct ArrayType;
+
+impl Type for ArrayType {
+    fn name(&self) -> &'static str {
+        "array"
+    }
+}

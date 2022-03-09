@@ -1,5 +1,5 @@
 use crate::runtime::{Bytecode, Frame, Instruction, VM};
-use crate::types::Object;
+use crate::types::{Nil, Object};
 
 use Instruction::*;
 
@@ -10,7 +10,7 @@ fn local_frame(vm: &mut VM) -> &mut Frame {
 #[test]
 fn push_const() {
     let mut vm = VM::new();
-    let bc = Bytecode::new(vec![PushConst(Object::from(()).ptr())]);
+    let bc = Bytecode::new(vec![PushConst(Object::from(Nil).ptr())]);
 
     vm.execute(bc).unwrap();
 
