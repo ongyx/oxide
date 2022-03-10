@@ -11,7 +11,7 @@ impl VM {
         }
     }
 
-    pub fn execute(&mut self, bc: Bytecode) -> VMResult {
+    pub fn execute(&mut self, bc: &mut Bytecode) -> VMResult {
         bc.execute(&mut self.stack)?;
         Ok(())
     }

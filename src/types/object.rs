@@ -76,6 +76,7 @@ object_to_impl!(
 
     Boolean: match *value {
         Object::Boolean(b) => Ok(b),
+        Object::Nil(_) => Ok(false),
         _ => Err(TypeError::Undefined),
     },
 

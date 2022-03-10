@@ -11,7 +11,7 @@ pub type TypeResult<T> = Result<T, TypeError>;
 type Binop = fn(ObjectPtr, ObjectPtr) -> TypeResult<ObjectPtr>;
 type Unop = fn(ObjectPtr) -> TypeResult<ObjectPtr>;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum CmpOp {
     Eq,
     Le,

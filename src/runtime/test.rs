@@ -15,7 +15,7 @@ fn push_const() {
 
     bc.consts = ovec![Nil];
 
-    vm.execute(bc).unwrap();
+    vm.execute(&mut bc).unwrap();
 
     let frame = local_frame(&mut vm);
 
@@ -31,7 +31,7 @@ fn load_store() {
     bc.locals = vec!["test"].iter().map(|&s| s.into()).collect();
     bc.consts = ovec!["Hello World!"];
 
-    vm.execute(bc).unwrap();
+    vm.execute(&mut bc).unwrap();
 
     let frame = local_frame(&mut vm);
 
@@ -53,7 +53,7 @@ fn global_load_store() {
 
     bc.consts = ovec!["Hello World!"];
 
-    vm.execute(bc).unwrap();
+    vm.execute(&mut bc).unwrap();
 
     let frame = local_frame(&mut vm);
 
@@ -71,7 +71,7 @@ fn add() {
 
     bc.consts = ovec![1, 2];
 
-    vm.execute(bc).unwrap();
+    vm.execute(&mut bc).unwrap();
 
     let frame = local_frame(&mut vm);
 
@@ -89,7 +89,7 @@ fn and() {
 
     bc.consts = ovec![true, false];
 
-    vm.execute(bc).unwrap();
+    vm.execute(&mut bc).unwrap();
 
     let frame = local_frame(&mut vm);
 
@@ -98,6 +98,18 @@ fn and() {
     } else {
         panic!("not a boolean")
     };
+}
+
+#[test]
+fn jump() {
+    let mut vm = VM::new();
+    let mut bc = Bytecode::new(vec![PushConst(0), JumpIf(3), PushConst(1), Nop]);
+
+    bc.consts = ovec![true, Nil];
+
+    vm.execute(&mut bc).unwrap();
+
+    assert!(bc.counter == 4);
 }
 
 #[test]
