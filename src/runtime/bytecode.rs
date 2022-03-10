@@ -91,6 +91,7 @@ impl Bytecode {
             And => type_binop!(local, and),
             Or => type_binop!(local, or),
             Not => type_unop!(local, not),
+            Nop => {}
             Jump(delta) => {
                 increment = false;
 
@@ -116,7 +117,6 @@ impl Bytecode {
                     self.counter = *delta;
                 }
             }
-            Nop => {}
             _ => return Err(VMError::Unimplemented),
         };
 

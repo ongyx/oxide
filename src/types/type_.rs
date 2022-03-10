@@ -23,19 +23,42 @@ pub enum CmpOp {
 
 type Cmp = fn(ObjectPtr, ObjectPtr, CmpOp) -> TypeResult<ObjectPtr>;
 
+/// A type object.
 #[derive(Default)]
 pub struct Type {
+    /// The type's name.
     pub name: &'static str,
 
-    pub add: Option<Binop>,
-    pub sub: Option<Binop>,
-    pub mul: Option<Binop>,
-    pub div: Option<Binop>,
-    pub pow: Option<Binop>,
-    pub and: Option<Binop>,
-    pub or: Option<Binop>,
+    /// Arithmetic operations
 
+    /// add(lhs, rhs)
+    pub add: Option<Binop>,
+    /// sub(lhs, rhs)
+    pub sub: Option<Binop>,
+    /// mul(lhs, rhs)
+    pub mul: Option<Binop>,
+    /// div(lhs, rhs)
+    pub div: Option<Binop>,
+    /// pow(lhs, rhs)
+    pub pow: Option<Binop>,
+
+    /// Boolean operations
+
+    /// Boolean and.
+    /// and(lhs, rhs)
+    pub and: Option<Binop>,
+    /// Boolean or.
+    /// or(lhs, rhs)
+    pub or: Option<Binop>,
+    /// Boolean not.
+    /// not(rhs)
     pub not: Option<Unop>,
 
+    /// Compare lhs to rhs by cmpop.
+    /// cmp(lhs, rhs, cmpop)
     pub cmp: Option<Cmp>,
+
+    /// Call self with args.
+    /// call(self, args)
+    pub call: Option<Binop>,
 }

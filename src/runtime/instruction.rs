@@ -27,12 +27,12 @@ pub enum Instruction {
     Or,
     Not,
 
-    // jump/function
+    // general
+    Nop,
     Jump(usize),
     JumpIf(usize),
     JumpIfNot(usize),
-    Func,
-    Return,
     Call,
-    Nop,
+    Return,
+    Func,
 }
