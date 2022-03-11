@@ -18,7 +18,9 @@ so feel free to open PRs or issues if you have suggestions/improvements to contr
 
 ## Setup
 
-oxide requires a nightly version of rust, so make sure to run `rustup toolchain install nightly` if you haven't done so.
+oxide currently does not use any nightly features, so it is recommended to use the stable toolchain: `rustup default stable`
+
+Tests pass on rustc 1.59.0 (latest stable), but you may install the beta or nightly toolchains to test oxide for regressions.
 
 To test, just run `cargo test`.
 
