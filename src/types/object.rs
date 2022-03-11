@@ -5,7 +5,7 @@ use std::rc::Rc;
 use crate::types::macros::{object_from_impl, object_to_impl};
 use crate::types::*;
 
-/// A reference-counted pointer to a VM object.
+/// A reference-counted pointer to an object.
 /// This allows objects to be moved around by cloning the pointer (i.e onto the eval stack).
 #[derive(Clone)]
 pub struct ObjectPtr {
@@ -39,8 +39,9 @@ impl Debug for ObjectPtr {
     }
 }
 
-/// A VM object.
-/// This directly owns the underlying value.
+/// An object value.
+/// The value may be a primitive (Boolean, Float, Integer, Nil, String)
+/// or a native Rust type (Native).
 #[derive(Debug)]
 pub enum Object {
     Boolean(Boolean),
@@ -48,9 +49,7 @@ pub enum Object {
     Integer(Integer),
     Nil(Nil),
     String(String),
-    Array(Array),
-    Struct(Struct),
-    Native(Native),
+    Native(Box<dyn Native>),
 }
 
 impl Object {
@@ -62,9 +61,7 @@ impl Object {
             Self::Integer(_) => &*IntegerType,
             Self::Nil(_) => &*NilType,
             Self::String(_) => &*StringType,
-            Self::Array(_) => &*ArrayType,
-            Self::Struct(_) => &*StructType,
-            Self::Native(t) => t.0,
+            Self::Native(t) => t.type_(),
         };
 
         ObjectPtr::new(self, type_)
