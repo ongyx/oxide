@@ -1,3 +1,5 @@
+use std::ptr;
+
 use crate::types::ObjectPtr;
 
 #[derive(Debug)]
@@ -61,4 +63,11 @@ pub struct Type {
     /// Call self with args.
     /// call(self, args)
     pub call: Option<Binop>,
+}
+
+// NOTE: compare types by pointers so we can identify native types.
+impl PartialEq for Type {
+    fn eq(&self, other: &Self) -> bool {
+        ptr::eq(self, other)
+    }
 }

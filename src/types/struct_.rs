@@ -1,7 +1,5 @@
-use lazy_static::lazy_static;
-
-use crate::native_preamble;
 use crate::types::{Native, ObjectPtr, Type};
+use crate::{native_preamble, typeobject};
 
 #[allow(unused)]
 pub struct Struct {
@@ -17,9 +15,9 @@ impl Native for Struct {
     }
 }
 
-lazy_static! {
-    pub static ref StructType: Type = Type {
+typeobject!(
+    pub StructType {
         name: "struct",
         ..Default::default()
-    };
-}
+    }
+);

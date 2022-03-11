@@ -1,7 +1,6 @@
-use lazy_static::lazy_static;
-
+use crate::typeobject;
 use crate::types::macros::arith;
-use crate::types::{Float, Object, Type};
+use crate::types::{Float, Object};
 use Object::*;
 
 pub type Integer = i64;
@@ -12,8 +11,8 @@ macro_rules! arith_i {
     };
 }
 
-lazy_static! {
-    pub static ref IntegerType: Type = Type {
+typeobject!(
+    pub IntegerType {
         name: "int",
 
         add: arith_i!(+),
@@ -39,5 +38,5 @@ lazy_static! {
         }),
 
         ..Default::default()
-    };
-}
+    }
+);

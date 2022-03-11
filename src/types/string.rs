@@ -1,9 +1,8 @@
-use lazy_static::lazy_static;
+use crate::typeobject;
+use crate::types::{Object};
 
-use crate::types::{Object, Type};
-
-lazy_static! {
-    pub static ref StringType: Type = Type {
+typeobject!(
+    pub StringType {
         name: "str",
 
         add: Some(|v, w| {
@@ -16,5 +15,5 @@ lazy_static! {
         }),
 
         ..Default::default()
-    };
-}
+    }
+);

@@ -1,11 +1,10 @@
-use lazy_static::lazy_static;
-
-use crate::types::{Object, Type};
+use crate::typeobject;
+use crate::types::{Object};
 
 pub type Boolean = bool;
 
-lazy_static! {
-    pub static ref BooleanType: Type = Type {
+typeobject!(
+    pub BooleanType {
         name: "bool",
 
         and: Some(|v, w| {
@@ -27,5 +26,5 @@ lazy_static! {
         }),
 
         ..Default::default()
-    };
-}
+    }
+);

@@ -1,7 +1,5 @@
-use lazy_static::lazy_static;
-
-use crate::native_preamble;
 use crate::types::{Native, ObjectPtr, Type};
+use crate::{native_preamble, typeobject};
 
 /// An array of objects.
 pub type Array = Vec<ObjectPtr>;
@@ -14,9 +12,9 @@ impl Native for Array {
     }
 }
 
-lazy_static! {
-    pub static ref ArrayType: Type = Type {
+typeobject!(
+    pub ArrayType {
         name: "array",
         ..Default::default()
-    };
-}
+    }
+);
