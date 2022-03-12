@@ -49,7 +49,7 @@ pub enum Object {
     Integer(Integer),
     Nil(Nil),
     String(String),
-    Native(Box<dyn Native>),
+    Native(Native),
 }
 
 impl Object {
@@ -61,7 +61,7 @@ impl Object {
             Self::Integer(_) => &*IntegerType,
             Self::Nil(_) => &*NilType,
             Self::String(_) => &*StringType,
-            Self::Native(t) => t.type_(),
+            Self::Native(t) => t.type_,
         };
 
         ObjectPtr::new(self, type_)

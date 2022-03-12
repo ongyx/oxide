@@ -1,14 +1,14 @@
 use crate::runtime::Bytecode;
-use crate::types::{Native, Type};
-use crate::{native_preamble, typeobject};
+use crate::typeobject;
+use crate::types::Native;
 
-pub type Code = Bytecode;
+pub struct Code {
+    bc: Bytecode,
+}
 
-impl Native for Code {
-    native_preamble!();
-
-    fn type_(&self) -> &'static Type {
-        &*CodeType
+impl From<Code> for Native {
+    fn from(c: Code) -> Self {
+        Native::new(&*CodeType, c)
     }
 }
 

@@ -1,5 +1,5 @@
-use crate::types::{Native, ObjectPtr, Type};
-use crate::{native_preamble, typeobject};
+use crate::typeobject;
+use crate::types::{Native, ObjectPtr};
 
 #[allow(unused)]
 pub struct Struct {
@@ -7,11 +7,9 @@ pub struct Struct {
     values: Vec<ObjectPtr>,
 }
 
-impl Native for Struct {
-    native_preamble!();
-
-    fn type_(&self) -> &'static Type {
-        &*StructType
+impl From<Struct> for Native {
+    fn from(st: Struct) -> Self {
+        Native::new(&*StructType, st)
     }
 }
 

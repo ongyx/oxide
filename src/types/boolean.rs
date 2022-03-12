@@ -1,5 +1,5 @@
 use crate::typeobject;
-use crate::types::{Object};
+use crate::types::Object;
 
 pub type Boolean = bool;
 

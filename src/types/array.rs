@@ -1,14 +1,14 @@
-use crate::types::{Native, ObjectPtr, Type};
-use crate::{native_preamble, typeobject};
+use crate::typeobject;
+use crate::types::{Native, ObjectPtr};
 
 /// An array of objects.
-pub type Array = Vec<ObjectPtr>;
+pub struct Array {
+    items: Vec<ObjectPtr>,
+}
 
-impl Native for Array {
-    native_preamble!();
-
-    fn type_(&self) -> &'static Type {
-        &*ArrayType
+impl From<Array> for Native {
+    fn from(arr: Array) -> Self {
+        Native::new(&*ArrayType, arr)
     }
 }
 
