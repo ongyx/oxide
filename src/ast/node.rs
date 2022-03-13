@@ -113,8 +113,11 @@ pub enum Statement<'a> {
     // keywords
     Break,
     Continue,
-    Import(Id<'a>),
-    Return(Exprs<'a>),
+    Import {
+        package: Id<'a>,
+        members: Option<Vec<Id<'a>>>,
+    },
+    Return(Expression<'a>),
 }
 
 impl<'a> From<IfElse<'a>> for Statement<'a> {

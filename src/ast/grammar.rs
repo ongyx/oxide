@@ -123,10 +123,22 @@ peg::parser! {
             = "continue" {Statement::Continue}
 
         rule import() -> Statement<'input>
-            = "import" _ target:target() {Statement::Import(target)}
+            = "import" _ "*" _ "from" _ package:relpath() {
+                Statement::Import {package, members: Some(vec!["*"])}
+            }
+            / "import" _ members:targets() _ "from" _ package:relpath() {
+                Statement::Import {package, members: Some(members)}
+            }
+            / "import" _ package:relpath() {
+                Statement::Import {package, members: None}
+            }
+
+        rule relpath() -> Id<'input> = $($("."*) path()) / $("."+)
+
+        rule path() -> Id<'input> = $(target() ++ ".")
 
         rule return_() -> Statement<'input>
-            = "return" _ exprs:exprs() {Statement::Return(exprs)}
+            = "return" _ expr:expr() {Statement::Return(expr)}
 
         rule exprs() -> Exprs<'input>
             = expr() ++ (_ "," __)
@@ -184,16 +196,16 @@ peg::parser! {
             = target() ++ (_ "," _)
 
         rule target() -> Id<'input>
-            = !keyword() id:$(alpha() alphanumeric()*) {id}
+            = quiet!{ !keyword() id:$(alpha() alphanumeric()*) {id} } / expected!("identifier")
 
-        rule alphanumeric() = ['a' ..= 'z' | 'A' ..= 'Z' | '0' ..= '9']
+        rule alphanumeric() = ['a' ..= 'z' | 'A' ..= 'Z' | '0' ..= '9' | '_']
 
         rule numeric() = ['0' ..= '9']
 
         rule alpha() = ['a' ..= 'z' | 'A' ..= 'Z']
 
         // Keywords cannot be used as identifiers.
-        rule keyword() = "true" / "false" / "nil" / "for" / "while" / "func" / "if" / "else" / "break" / "continue" / "import" / "return"
+        rule keyword() = "true" / "false" / "nil" / "for" / "while" / "break" / "continue" / "func" / "return" / "if" / "else" / "import" / "from"
 
         rule __ = quiet!{[' ' | '\t' | '\n']*}
         rule _ = quiet!{[' ' | '\t']*}

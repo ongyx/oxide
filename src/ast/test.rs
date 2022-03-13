@@ -137,7 +137,7 @@ fn function_def() {
         vec![Statement::Function {
             name: "main",
             params: vec![],
-            body: vec![Statement::Return(vec![Literal::Integer(0).into()])]
+            body: vec![Statement::Return(Literal::Integer(0).into())]
         }]
     )
 }
@@ -252,4 +252,47 @@ fn while_loop() {
             ]
         }]
     )
+}
+
+#[test]
+fn import() {
+    assert_eq!(
+        body("import math"),
+        vec![Statement::Import {
+            package: "math",
+            members: None,
+        }]
+    )
+}
+
+#[test]
+fn import_from() {
+    assert_eq!(
+        body("import ceil, floor from math"),
+        vec![Statement::Import {
+            package: "math",
+            members: Some(vec!["ceil", "floor"])
+        }]
+    );
+    assert_eq!(
+        body("import local_module from ."),
+        vec![Statement::Import {
+            package: ".",
+            members: Some(vec!["local_module"])
+        }]
+    );
+    assert_eq!(
+        body("import foo, bar from .local_module"),
+        vec![Statement::Import {
+            package: ".local_module",
+            members: Some(vec!["foo", "bar"])
+        }]
+    );
+    assert_eq!(
+        body("import * from ."),
+        vec![Statement::Import {
+            package: ".",
+            members: Some(vec!["*"])
+        }]
+    );
 }
