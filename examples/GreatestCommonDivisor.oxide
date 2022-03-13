@@ -6,7 +6,7 @@ import pragma.cub
 
 import math
 
-func gcd(p, q) returns {
+func gcd(p, q) {
 	if q == 0 {
 		return p
 	} else {

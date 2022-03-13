@@ -4,7 +4,7 @@
 
 import pragma.cub
 
-func factorial(x) returns {
+func factorial(x) {
 	
 	n = 0
 

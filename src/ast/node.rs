@@ -53,6 +53,11 @@ pub enum Expression<'a> {
         name: Id<'a>,
         args: Exprs<'a>,
     },
+
+    Subscript {
+        value: Expr<'a>,
+        by: Expr<'a>,
+    },
 }
 
 impl<'a> From<Literal<'a>> for Expression<'a> {
@@ -90,6 +95,12 @@ pub type Stmt<'a> = Box<Statement<'a>>;
 
 #[derive(Debug, PartialEq)]
 pub enum Statement<'a> {
+    Iter {
+        targets: Vec<Id<'a>>,
+        value: Expression<'a>,
+        body: Body<'a>,
+    },
+
     Loop {
         init: Option<Assign<'a>>,
         cond: Expression<'a>,
@@ -100,6 +111,7 @@ pub enum Statement<'a> {
     Function {
         name: Id<'a>,
         params: Vec<Id<'a>>,
+        varargs: Option<Id<'a>>,
         body: Body<'a>,
     },
 

@@ -1,33 +1,11 @@
-use peg::error::ParseError;
-use peg::str::LineCol;
-
 use crate::ast::node::*;
 use crate::ast::Ast;
-
-fn error_msg(code: &str, e: ParseError<LineCol>) -> String {
-    let code_line = code.lines().nth(e.location.line - 1).unwrap();
-
-    format!(
-        "
-    error at line {line}:{column}
-    {code}
-    {ptr:>hint$}
-    expected one of {tokens}
-    ",
-        line = e.location.line,
-        column = e.location.column,
-        code = code_line,
-        ptr = "^",
-        hint = e.location.column,
-        tokens = e.expected
-    )
-}
 
 fn body(code: &str) -> Body {
     let mut ast = Ast::new(code);
     match ast.parse() {
         Err(e) => {
-            panic!("{}", error_msg(code, e));
+            panic!("{}", ast.format(e));
         }
         _ => ast.root.expect("ast error"),
     }
@@ -37,7 +15,7 @@ fn expr(code: &str) -> Statement {
     let mut ast = Ast::new(code);
     match ast.parse_expr() {
         Err(e) => {
-            panic!("{}", error_msg(code, e));
+            panic!("{}", ast.format(e));
         }
         _ => {
             let mut root = ast.root.expect("ast error");
@@ -126,25 +104,41 @@ fn function_call() {
 
 #[test]
 fn function_def() {
-    let code = "
+    let code0 = "
     func main() {
         return 0
     }
     ";
+    let code1 = "
+    func main(...args) {
+        return args
+    }
+    ";
 
     assert_eq!(
-        body(code),
+        body(code0),
         vec![Statement::Function {
             name: "main",
             params: vec![],
+            varargs: None,
             body: vec![Statement::Return(Literal::Integer(0).into())]
         }]
-    )
+    );
+
+    assert_eq!(
+        body(code1),
+        vec![Statement::Function {
+            name: "main",
+            params: vec![],
+            varargs: Some("args"),
+            body: vec![Statement::Return(Expression::Id("args"))]
+        }]
+    );
 }
 
 #[test]
 fn if_chain() {
-    let code = "
+    let code0 = "
     a = 1
     if a == 1 {
         print('nice')
@@ -153,8 +147,14 @@ fn if_chain() {
     }
     ";
 
+    let code1 = "
+    if true {
+        print('indeed')
+    }
+    ";
+
     assert_eq!(
-        body(code),
+        body(code0),
         vec![
             Assign {
                 targets: vec!["a"],
@@ -182,7 +182,23 @@ fn if_chain() {
             }
             .into(),
         ]
-    )
+    );
+
+    assert_eq!(
+        body(code1),
+        vec![IfElse {
+            if_: vec![If {
+                cond: Literal::Boolean(true).into(),
+                body: vec![Expression::Call {
+                    name: "print",
+                    args: vec![Literal::String("indeed").into()]
+                }
+                .into()]
+            }],
+            else_: None
+        }
+        .into()]
+    );
 }
 
 #[test]

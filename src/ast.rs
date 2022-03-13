@@ -21,8 +21,27 @@ impl<'a> Ast<'a> {
         Self { source, root: None }
     }
 
+    pub fn format(&self, e: ParseError<LineCol>) -> String {
+        let code_line = self.source.lines().nth(e.location.line - 1).unwrap();
+
+        format!(
+            "
+        error at line {line}:{column}
+        {code}
+        {ptr:>hint$}
+        expected one of {tokens}
+        ",
+            line = e.location.line,
+            column = e.location.column,
+            code = code_line,
+            ptr = "^",
+            hint = e.location.column,
+            tokens = e.expected
+        )
+    }
+
     pub fn parse(&mut self) -> Result<(), ParseError<LineCol>> {
-        match parser::body(self.source) {
+        match parser::file(self.source) {
             Ok(body) => {
                 self.root = Some(body);
                 Ok(())

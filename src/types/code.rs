@@ -2,6 +2,7 @@ use crate::runtime::Bytecode;
 use crate::typeobject;
 use crate::types::Native;
 
+#[allow(dead_code)]
 pub struct Code {
     bc: Bytecode,
 }

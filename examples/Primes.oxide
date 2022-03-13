@@ -6,7 +6,7 @@ import pragma.cub
 
 import math
 
-func isPrime(num) returns {
+func isPrime(num) {
 	if num < 2 {
 		return false
 	}

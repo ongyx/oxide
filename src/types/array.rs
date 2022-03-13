@@ -2,6 +2,7 @@ use crate::typeobject;
 use crate::types::{Native, ObjectPtr};
 
 /// An array of objects.
+#[allow(dead_code)]
 pub struct Array {
     items: Vec<ObjectPtr>,
 }
