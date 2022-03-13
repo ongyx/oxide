@@ -1,42 +1,43 @@
 pub mod node;
-pub mod token;
 
-mod parser;
+mod grammar;
 
 #[cfg(test)]
 mod test;
 
-use logos::Span;
 use peg::error::ParseError;
+use peg::str::LineCol;
 
-pub use crate::ast::node::{Body, Node};
-pub use crate::ast::parser::oxide_parser as Parser;
-pub use crate::ast::token::{tokenise, Token};
+pub use crate::ast::grammar::parser;
+use crate::ast::node::Body;
 
 pub struct Ast<'a> {
-    pub tokens: Vec<Token<'a>>,
-    pub spans: Vec<Span>,
+    pub source: &'a str,
     pub root: Option<Body<'a>>,
-    pub err: Option<ParseError<usize>>,
 }
 
 impl<'a> Ast<'a> {
-    pub fn new(code: &str) -> Ast {
-        let (tokens, spans) = tokenise(code);
+    pub fn new(source: &'a str) -> Self {
+        Self { source, root: None }
+    }
 
-        match Parser::body(&tokens) {
-            Ok(node) => Ast {
-                tokens,
-                spans,
-                root: Some(node),
-                err: None,
-            },
-            Err(e) => Ast {
-                tokens,
-                spans,
-                root: None,
-                err: Some(e),
-            },
+    pub fn parse(&mut self) -> Result<(), ParseError<LineCol>> {
+        match parser::body(self.source) {
+            Ok(body) => {
+                self.root = Some(body);
+                Ok(())
+            }
+            Err(e) => Err(e),
+        }
+    }
+
+    pub fn parse_expr(&mut self) -> Result<(), ParseError<LineCol>> {
+        match parser::expr(self.source) {
+            Ok(body) => {
+                self.root = Some(vec![body.into()]);
+                Ok(())
+            }
+            Err(e) => Err(e),
         }
     }
 }

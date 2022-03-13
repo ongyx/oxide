@@ -1,24 +1,45 @@
-use crate::ast::node::{Body, Node};
-use crate::ast::token::Token;
+use peg::error::ParseError;
+use peg::str::LineCol;
+
+use crate::ast::node::*;
 use crate::ast::Ast;
 
-fn body(ast: Ast) -> Body {
-    match ast.err {
-        Some(e) => {
-            println!("{:?}", ast.tokens);
-            panic!("{} (token: {:?})", e, ast.tokens[e.location]);
+fn error_msg(code: &str, e: ParseError<LineCol>) -> String {
+    let code_line = code.lines().nth(e.location.line - 1).unwrap();
+
+    format!(
+        "
+    error at line {line}:{column}
+    {code}
+    {ptr:>hint$}
+    expected one of {tokens}
+    ",
+        line = e.location.line,
+        column = e.location.column,
+        code = code_line,
+        ptr = "^",
+        hint = e.location.column,
+        tokens = e.expected
+    )
+}
+
+fn body(code: &str) -> Body {
+    let mut ast = Ast::new(code);
+    match ast.parse() {
+        Err(e) => {
+            panic!("{}", error_msg(code, e));
         }
-        None => ast.root.expect("ast error"),
+        _ => ast.root.expect("ast error"),
     }
 }
 
-fn expr(ast: Ast) -> Node {
-    match ast.err {
-        Some(e) => {
-            println!("{:?}", ast.tokens);
-            panic!("{} (token: {:?})", e, ast.tokens[e.location]);
+fn expr(code: &str) -> Statement {
+    let mut ast = Ast::new(code);
+    match ast.parse_expr() {
+        Err(e) => {
+            panic!("{}", error_msg(code, e));
         }
-        None => {
+        _ => {
             let mut root = ast.root.expect("ast error");
             root.swap_remove(0)
         }
@@ -28,76 +49,78 @@ fn expr(ast: Ast) -> Node {
 #[test]
 fn array_literal() {
     assert_eq!(
-        expr(Ast::new("[1, 2, 3]")),
-        Node::Array(vec![
-            Node::Value(Token::Integer(1)),
-            Node::Value(Token::Integer(2)),
-            Node::Value(Token::Integer(3)),
-        ])
+        expr("[1, 2, 3]"),
+        Statement::Expr(Expression::Array(vec![
+            Literal::Integer(1).into(),
+            Literal::Integer(2).into(),
+            Literal::Integer(3).into(),
+        ]))
     )
 }
 
 #[test]
 fn add() {
     assert_eq!(
-        expr(Ast::new("1 + 1")),
-        Node::Binop {
-            op: Token::Add,
-            lhs: Box::new(Node::Value(Token::Integer(1))),
-            rhs: Box::new(Node::Value(Token::Integer(1))),
+        expr("1 + 1"),
+        Expression::Binop {
+            op: Op::Add,
+            lhs: Box::new(Literal::Integer(1).into()),
+            rhs: Box::new(Literal::Integer(1).into()),
         }
+        .into()
     )
 }
 
 #[test]
 fn nested_add() {
     assert_eq!(
-        expr(Ast::new("(1 + (2 + (3)))")),
-        Node::Binop {
-            op: Token::Add,
-            lhs: Box::new(Node::Value(Token::Integer(1))),
-            rhs: Box::new(Node::Binop {
-                op: Token::Add,
-                lhs: Box::new(Node::Value(Token::Integer(2))),
-                rhs: Box::new(Node::Value(Token::Integer(3))),
+        expr("(1 + (2 + (3)))"),
+        Expression::Binop {
+            op: Op::Add,
+            lhs: Box::new(Literal::Integer(1).into()),
+            rhs: Box::new(Expression::Binop {
+                op: Op::Add,
+                lhs: Box::new(Literal::Integer(2).into()),
+                rhs: Box::new(Literal::Integer(3).into()),
             }),
         }
+        .into()
     );
 }
 
 #[test]
 fn assign() {
     assert_eq!(
-        expr(Ast::new("a = b")),
-        Node::Assign {
-            targets: vec![Token::ID("a")],
-            expr: Box::new(Node::Value(Token::ID("b")))
+        body("a = b"),
+        vec![Assign {
+            targets: vec!["a"],
+            expr: Expression::Id("b")
         }
+        .into()]
     )
 }
 
 #[test]
 fn multiple_assign() {
     assert_eq!(
-        expr(Ast::new("a, b = [1, 2]")),
-        Node::Assign {
-            targets: vec![Token::ID("a"), Token::ID("b")],
-            expr: Box::new(Node::Array(vec![
-                Node::Value(Token::Integer(1)),
-                Node::Value(Token::Integer(2))
-            ]))
+        body("a, b = [1, 2]"),
+        vec![Assign {
+            targets: vec!["a", "b"],
+            expr: Expression::Array(vec![Literal::Integer(1).into(), Literal::Integer(2).into()])
         }
+        .into()]
     )
 }
 
 #[test]
 fn function_call() {
     assert_eq!(
-        body(Ast::new("print('Hello World!')")),
-        vec![Node::Call {
-            name: Token::ID("print"),
-            args: vec![Node::Value(Token::Str("Hello World!"))]
-        }]
+        body("print('Hello World!')"),
+        vec![Expression::Call {
+            name: "print",
+            args: vec![Literal::String("Hello World!").into()]
+        }
+        .into()]
     )
 }
 
@@ -110,11 +133,11 @@ fn function_def() {
     ";
 
     assert_eq!(
-        body(Ast::new(code)),
-        vec![Node::Function {
-            name: Token::ID("main"),
+        body(code),
+        vec![Statement::Function {
+            name: "main",
             params: vec![],
-            body: vec![Node::Return(Box::new(Node::Value(Token::Integer(0))))]
+            body: vec![Statement::Return(vec![Literal::Integer(0).into()])]
         }]
     )
 }
@@ -131,29 +154,33 @@ fn if_chain() {
     ";
 
     assert_eq!(
-        body(Ast::new(code)),
+        body(code),
         vec![
-            Node::Assign {
-                targets: vec![Token::ID("a")],
-                expr: Box::new(Node::Value(Token::Integer(1)))
-            },
-            Node::If {
-                if_: vec![(
-                    Box::new(Node::Binop {
-                        op: Token::Eq,
-                        lhs: Box::new(Node::Value(Token::ID("a"))),
-                        rhs: Box::new(Node::Value(Token::Integer(1))),
-                    }),
-                    vec![Node::Call {
-                        name: Token::ID("print"),
-                        args: vec![Node::Value(Token::Str("nice"))]
-                    }]
-                )],
-                else_: Some(vec![Node::Call {
-                    name: Token::ID("print"),
-                    args: vec![Node::Value(Token::Str("impossible"))]
-                }])
+            Assign {
+                targets: vec!["a"],
+                expr: Literal::Integer(1).into()
             }
+            .into(),
+            IfElse {
+                if_: vec![If {
+                    cond: Expression::Binop {
+                        op: Op::Eq,
+                        lhs: Box::new(Expression::Id("a")),
+                        rhs: Box::new(Literal::Integer(1).into()),
+                    },
+                    body: vec![Expression::Call {
+                        name: "print",
+                        args: vec![Literal::String("nice").into()]
+                    }
+                    .into()]
+                }],
+                else_: Some(vec![Expression::Call {
+                    name: "print",
+                    args: vec![Literal::String("impossible").into()]
+                }
+                .into()])
+            }
+            .into(),
         ]
     )
 }
@@ -167,26 +194,33 @@ fn for_loop() {
     ";
 
     assert_eq!(
-        body(Ast::new(code)),
-        vec![Node::Loop {
-            init: Some(Box::new(Node::Assign {
-                targets: vec![Token::ID("i")],
-                expr: Box::new(Node::Value(Token::Integer(0)))
-            })),
-            cond: Box::new(Node::Binop {
-                op: Token::Lt,
-                lhs: Box::new(Node::Value(Token::ID("i"))),
-                rhs: Box::new(Node::Value(Token::Integer(5)))
-            }),
-            next: Some(Box::new(Node::AugAssign {
-                target: Token::ID("i"),
-                op: Token::Add,
-                expr: Box::new(Node::Value(Token::Integer(1)))
-            })),
-            body: vec![Node::Call {
-                name: Token::ID("print"),
-                args: vec![Node::Value(Token::ID("i"))]
-            }]
+        body(code),
+        vec![Statement::Loop {
+            init: Some(
+                Assign {
+                    targets: vec!["i"],
+                    expr: Literal::Integer(0).into(),
+                }
+                .into()
+            ),
+            cond: Expression::Binop {
+                op: Op::Lt,
+                lhs: Box::new(Expression::Id("i")),
+                rhs: Box::new(Literal::Integer(5).into()),
+            },
+            next: Some(
+                AugAssign {
+                    target: "i",
+                    op: Op::Add,
+                    expr: Literal::Integer(1).into()
+                }
+                .into()
+            ),
+            body: vec![Expression::Call {
+                name: "print",
+                args: vec![Expression::Id("i")]
+            }
+            .into()]
         }]
     )
 }
@@ -202,18 +236,19 @@ fn while_loop() {
     ";
 
     assert_eq!(
-        body(Ast::new(code)),
-        vec![Node::Loop {
+        body(code),
+        vec![Statement::Loop {
             init: None,
-            cond: Box::new(Node::Value(Token::True)),
+            cond: Literal::Boolean(true).into(),
             next: None,
             body: vec![
-                Node::Call {
-                    name: Token::ID("print"),
-                    args: vec![Node::Value(Token::Str("lol"))]
-                },
-                Node::Keyword(Token::Break),
-                Node::Keyword(Token::Continue),
+                Expression::Call {
+                    name: "print",
+                    args: vec![Literal::String("lol").into()]
+                }
+                .into(),
+                Statement::Break,
+                Statement::Continue
             ]
         }]
     )

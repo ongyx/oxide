@@ -36,7 +36,7 @@ fn load_store() {
     let frame = local_frame(&mut vm);
 
     if let Object::String(s) = &*frame.eval[0].borrow() {
-        assert!(s == "Hello World!")
+        assert_eq!(s, "Hello World!")
     } else {
         panic!("not a string")
     };
@@ -58,7 +58,7 @@ fn global_load_store() {
     let frame = local_frame(&mut vm);
 
     if let Object::String(s) = &*frame.eval[0].borrow() {
-        assert!(s == "Hello World!")
+        assert_eq!(s, "Hello World!")
     } else {
         panic!("not a string")
     };
@@ -76,7 +76,7 @@ fn add() {
     let frame = local_frame(&mut vm);
 
     if let Object::Integer(i) = *frame.eval[0].borrow() {
-        assert!(i == 3)
+        assert_eq!(i, 3)
     } else {
         panic!("not an integer")
     };
@@ -109,7 +109,7 @@ fn jump() {
 
     vm.execute(&mut bc).unwrap();
 
-    assert!(bc.counter == 4);
+    assert_eq!(bc.counter, 4);
 }
 
 #[test]
@@ -120,5 +120,5 @@ fn frames() {
     let (_, local) = vm.stack.frames().unwrap();
 
     assert!(!local.is_none());
-    assert!(vm.stack.len() == 2);
+    assert_eq!(vm.stack.len(), 2);
 }
