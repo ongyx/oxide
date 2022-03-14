@@ -17,17 +17,31 @@ fn unop<'a>(op: Op, rhs: Expression<'a>) -> Expression<'a> {
 
 peg::parser! {
     pub grammar parser() for str {
-
         pub rule file() -> Body<'input>
-            = statements()
+            = traced(<_file()>)
+
+        // pegviz
+        rule traced<T>(e: rule<T>) -> T =
+            &(input:$([_]*) {
+                #[cfg(feature = "trace")]
+                println!("[PEG_INPUT_START]\n{}\n[PEG_TRACE_START]", input);
+            })
+            e:e()? {?
+                #[cfg(feature = "trace")]
+                println!("[PEG_TRACE_STOP]");
+                e.ok_or("")
+            }
+
+        rule _file() -> Body<'input>
+            = __ s:statements() __ {s}
 
         rule body() -> Body<'input>
-            = "{" s:statements() "}" {s}
+            = "{" __ s:statements() __ "}" {s}
 
         rule statements() -> Body<'input>
             // Statements must end with a newline
             // (optionally followed by any more newlines and indentation)
-            = __ s:(statement() ** ("\n" __)) __ {s}
+            = s:(statement() ** __) {s}
 
         pub rule statement() -> Statement<'input>
             = compound_statement()
@@ -42,11 +56,49 @@ peg::parser! {
             / return_()
 
         rule compound_statement() -> Statement<'input>
-            = for_loop()
+            = function()
+            / struct_()
+            / if_else()
+            / for_loop()
             / for_in_loop()
             / while_loop()
-            / function()
-            / if_chain()
+
+        rule function() -> Statement<'input>
+            = "func" _ name:target() _ "(" _ params:targets()? _ varargs:varargs()? _ ")" _ body:body() {
+                Statement::Function {
+                    name,
+                    params: params.unwrap_or(vec![]),
+                    varargs,
+                    body
+                }
+            }
+
+        rule varargs() -> Id<'input> = "..." t:target() {t}
+
+        rule struct_() -> Statement<'input>
+            = "struct" _ name:target() _ "{" __ fields:targets() __ "}" {
+                Statement::Struct { name, fields }
+            }
+
+        rule if_else() -> Statement<'input>
+            = if_:if_() __ else_if:(if_() ** ("else" _)) __ else_:else_()? {
+                let mut chain = Vec::new();
+                chain.push(if_);
+                chain.extend(else_if);
+
+                IfElse { chain, else_ }.into()
+            }
+
+        rule if_() -> If<'input>
+            = "if" _ cond:expr() _ body:body() {
+                If {
+                    cond,
+                    body,
+                }
+            }
+
+        rule else_() -> Body<'input>
+            = "else" _ body:body() { body }
 
         rule for_loop() -> Statement<'input>
             = "for" _ init:assign() _ "," _ cond:expr() _ "," _ next:augassign() _ body:body() {
@@ -74,42 +126,6 @@ peg::parser! {
                     body
                 }
             }
-
-        rule function() -> Statement<'input>
-            = "func" _ name:target() _ "(" _ params:targets()? _ varargs:varargs()? _ ")" _ body:body() {
-                Statement::Function {
-                    name,
-                    params: params.unwrap_or(vec![]),
-                    varargs,
-                    body
-                }
-            }
-
-        rule varargs() -> Id<'input> = "..." t:target() {t}
-
-        rule if_chain() -> Statement<'input>
-            = if_:if_() __ else_if:else_if() ** ("\n" __) __ else_:else_()? {
-                let mut chain = vec![if_];
-                chain.extend(else_if);
-
-                IfElse {
-                    if_: chain,
-                    else_
-                }.into()
-            }
-
-        rule if_() -> If<'input>
-            = "if" _ cond:expr() _ body:body() {
-                If { cond, body }
-            }
-
-        rule else_if() -> If<'input>
-            = "else" _ "if" _ cond:expr() _ body:body() {
-                If { cond, body }
-            }
-
-        rule else_() -> Body<'input>
-            = "else" _ body:body() {body}
 
         rule assignment() -> Statement<'input>
             = a:assign() {a.into()}
@@ -224,7 +240,7 @@ peg::parser! {
 
         rule numeric() = ['0' ..= '9']
 
-        rule alpha() = ['a' ..= 'z' | 'A' ..= 'Z']
+        rule alpha() = ['a' ..= 'z' | 'A' ..= 'Z' | '_']
 
         // Keywords cannot be used as identifiers.
         rule keyword() = "true" / "false" / "nil" / "for" / "while" / "break" / "continue" / "func" / "return" / "if" / "else" / "import" / "from"

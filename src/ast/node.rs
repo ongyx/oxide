@@ -87,7 +87,7 @@ pub struct If<'a> {
 
 #[derive(Debug, PartialEq)]
 pub struct IfElse<'a> {
-    pub if_: Vec<If<'a>>,
+    pub chain: Vec<If<'a>>,
     pub else_: Option<Body<'a>>,
 }
 
@@ -115,6 +115,11 @@ pub enum Statement<'a> {
         body: Body<'a>,
     },
 
+    Struct {
+        name: Id<'a>,
+        fields: Vec<Id<'a>>,
+    },
+
     IfElse(IfElse<'a>),
 
     Assign(Assign<'a>),
@@ -133,8 +138,8 @@ pub enum Statement<'a> {
 }
 
 impl<'a> From<IfElse<'a>> for Statement<'a> {
-    fn from(ie: IfElse<'a>) -> Self {
-        Self::IfElse(ie)
+    fn from(i: IfElse<'a>) -> Self {
+        Self::IfElse(i)
     }
 }
 

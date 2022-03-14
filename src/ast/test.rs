@@ -162,7 +162,7 @@ fn if_chain() {
             }
             .into(),
             IfElse {
-                if_: vec![If {
+                chain: vec![If {
                     cond: Expression::Binop {
                         op: Op::Eq,
                         lhs: Box::new(Expression::Id("a")),
@@ -172,7 +172,7 @@ fn if_chain() {
                         name: "print",
                         args: vec![Literal::String("nice").into()]
                     }
-                    .into()]
+                    .into()],
                 }],
                 else_: Some(vec![Expression::Call {
                     name: "print",
@@ -187,15 +187,15 @@ fn if_chain() {
     assert_eq!(
         body(code1),
         vec![IfElse {
-            if_: vec![If {
+            chain: vec![If {
                 cond: Literal::Boolean(true).into(),
                 body: vec![Expression::Call {
                     name: "print",
                     args: vec![Literal::String("indeed").into()]
                 }
-                .into()]
+                .into()],
             }],
-            else_: None
+            else_: None,
         }
         .into()]
     );

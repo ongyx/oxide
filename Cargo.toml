@@ -1,9 +1,12 @@
 [package]
 name = "oxide"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2021"
 
 [dependencies]
 peg = "0.8.0"
 strum = { version = "0.24", features = ["derive"] }
 lazy_static = "1.4.0"
+
+[features]
+trace = ["peg/trace"]

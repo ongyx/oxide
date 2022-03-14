@@ -24,6 +24,14 @@ Tests pass on rustc 1.59.0 (latest stable), but you may install the beta or nigh
 
 To test, just run `cargo test`.
 
+## Debugging
+
+[pegviz] comes in handy when debugging the AST. Install it, and then run:
+
+`cargo run --features trace <file> | pegviz -o trace.html`
+
+to generate a graphical trace of the rules matched.
+
 ## Todo
 
 - [x] AST parser
@@ -40,3 +48,4 @@ MIT.
 
 [Cub]: https://github.com/louisdh/cub
 [ox]: https://github.com/ongyx/ox
+[pegviz]: https://github.com/fasterthanlime/pegviz
