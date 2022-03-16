@@ -6,7 +6,7 @@ use oxide::ast::Ast;
 
 #[test]
 fn parse_examples() {
-    let files = setup::examples().unwrap();
+    let files = setup::code().unwrap();
     assert!(!files.is_empty());
 
     for file in files {
@@ -14,7 +14,7 @@ fn parse_examples() {
 
         let code = fs::read_to_string(&file).expect("couldn't read file");
 
-        let mut ast = Ast::new(code.as_str());
+        let mut ast = Ast::new(&code);
 
         if let Err(e) = ast.parse() {
             panic!("{}", ast.format(e));

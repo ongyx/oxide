@@ -33,19 +33,28 @@ peg::parser! {
             }
 
         rule _file() -> Body<'input>
-            = __ s:statements() __ {s}
+            = ___ s:statements() ___ {s}
 
         rule body() -> Body<'input>
-            = "{" __ s:statements() __ "}" {s}
+            = "{" ___ s:statements() ___ "}" {s}
 
         rule statements() -> Body<'input>
-            // Statements must end with a newline
-            // (optionally followed by any more newlines and indentation)
-            = s:(statement() ** __) {s}
+            = l:line() ++ (_ "\n") {l.into_iter().flatten().collect()}
+            // a single statement by itself
+            / l:line() ![_] {
+                if let Some(stmt) = l {
+                    vec![stmt]
+                } else {
+                    Vec::new()
+                }
+            }
+
+        // A line that might have a statement and/or a comment.
+        rule line() -> Option<Statement<'input>>
+            = _ s:statement()? _ comment()? {s}
 
         pub rule statement() -> Statement<'input>
-            = compound_statement()
-            / simple_statement()
+            = compound_statement() / simple_statement()
 
         rule simple_statement() -> Statement<'input>
             = assignment()
@@ -64,7 +73,7 @@ peg::parser! {
             / while_loop()
 
         rule function() -> Statement<'input>
-            = "func" _ name:target() _ "(" _ params:targets()? _ varargs:varargs()? _ ")" _ body:body() {
+            = "func" __ name:target() _ "(" _ params:targets()? _ varargs:varargs()? _ ")" _ body:body() {
                 Statement::Function {
                     name,
                     params: params.unwrap_or(vec![]),
@@ -76,21 +85,23 @@ peg::parser! {
         rule varargs() -> Id<'input> = "..." t:target() {t}
 
         rule struct_() -> Statement<'input>
-            = "struct" _ name:target() _ "{" __ fields:targets() __ "}" {
+            = "struct" __ name:target() _ "{" ___ fields:targets() ___ "}" {
                 Statement::Struct { name, fields }
             }
 
         rule if_else() -> Statement<'input>
-            = if_:if_() __ else_if:(if_() ** ("else" _)) __ else_:else_()? {
-                let mut chain = Vec::new();
-                chain.push(if_);
+            = if_:if_() _ else_if:(else_if() ** _) else_:else_()? {
+                let mut chain = vec![if_];
                 chain.extend(else_if);
 
                 IfElse { chain, else_ }.into()
             }
 
+        rule else_if() -> If<'input>
+            = "else" __ i:if_() {i}
+
         rule if_() -> If<'input>
-            = "if" _ cond:expr() _ body:body() {
+            = "if" __ cond:expr() _ body:body() {
                 If {
                     cond,
                     body,
@@ -98,10 +109,10 @@ peg::parser! {
             }
 
         rule else_() -> Body<'input>
-            = "else" _ body:body() { body }
+            = "else" __ body:body() { body }
 
         rule for_loop() -> Statement<'input>
-            = "for" _ init:assign() _ "," _ cond:expr() _ "," _ next:augassign() _ body:body() {
+            = "for" __ init:assign() _ "," _ cond:expr() _ "," _ next:augassign() _ body:body() {
                 Statement::Loop{
                     init: Some(init),
                     cond,
@@ -111,14 +122,14 @@ peg::parser! {
             }
 
         rule for_in_loop() -> Statement<'input>
-            = "for" _ targets:targets() _ "in" _ value:expr() _ body:body() {
+            = "for" __ targets:targets() __ "in" __ value:expr() _ body:body() {
                 Statement::Iter {
                     targets, value, body
                 }
             }
 
         rule while_loop() -> Statement<'input>
-            = "while" _ cond:expr() _ body:body() {
+            = "while" __ cond:expr() _ body:body() {
                 Statement::Loop {
                     init: None,
                     cond,
@@ -155,23 +166,23 @@ peg::parser! {
             = "continue" {Statement::Continue}
 
         rule import() -> Statement<'input>
-            = "import" _ "*" _ "from" _ package:path() {
+            = "import" __ "*" __ "from" __ package:path() {
                 Statement::Import {package, members: Some(vec!["*"])}
             }
-            / "import" _ members:targets() _ "from" _ package:path() {
+            / "import" __ members:targets() __ "from" __ package:path() {
                 Statement::Import {package, members: Some(members)}
             }
-            / "import" _ package:path() {
+            / "import" __ package:path() {
                 Statement::Import {package, members: None}
             }
 
         rule path() -> Id<'input> = $($("."*) identifier()) / $("."+)
 
         rule return_() -> Statement<'input>
-            = "return" _ expr:expr() {Statement::Return(expr)}
+            = "return" __ expr:expr() {Statement::Return(expr)}
 
         rule exprs() -> Exprs<'input>
-            = expr() ++ (_ "," __)
+            = expr() ++ (_ "," ___)
 
         pub rule expr() -> Expression<'input> = precedence!{
             lhs:(@) _ "||" _ rhs:@ { binop(Op::Or, lhs, rhs) }
@@ -198,18 +209,18 @@ peg::parser! {
             lhs:@ _ "^" _ rhs:(@) { binop(Op::Pow, lhs, rhs) }
             --
             // function call
-            name:identifier() _ "(" __ args:exprs()? __ ")" { Expression::Call {name, args: args.unwrap_or(vec![])} }
+            name:identifier() "(" ___ args:exprs()? ___ ")" { Expression::Call {name, args: args.unwrap_or(vec![])} }
             // subscript
-            value:(@) __ "[" by:expr() "]" __ { Expression::Subscript {value: Box::new(value), by: Box::new(by)} }
+            value:(@) "[" ___ by:expr() ___ "]" { Expression::Subscript {value: Box::new(value), by: Box::new(by)} }
             --
             // literal value
             l:literal() { Expression::Literal(l) }
             // identifier
             id:identifier() { Expression::Id(id) }
             // expr wrapped in parentheses
-            "(" __ e:expr() __ ")" {e}
+            "(" ___ e:expr() ___ ")" {e}
             // array literal
-            "[" __ e:exprs()? __ "]" { Expression::Array(e.unwrap_or(vec![])) }
+            "[" ___ e:exprs()? ___ "]" { Expression::Array(e.unwrap_or(vec![])) }
         }
 
         rule literal() -> Literal<'input>
@@ -245,7 +256,8 @@ peg::parser! {
         // Keywords cannot be used as identifiers.
         rule keyword() = "true" / "false" / "nil" / "for" / "while" / "break" / "continue" / "func" / "return" / "if" / "else" / "import" / "from"
 
-        rule __ = quiet!{([' ' | '\t' | '\n'] / comment())*}
+        rule ___ = quiet!{[' ' | '\t' | '\n']*}
+        rule __ = quiet!{[' ' | '\t']+}
         rule _ = quiet!{[' ' | '\t']*}
 
         rule comment() = quiet!{ "//" $([^'\n']*) }

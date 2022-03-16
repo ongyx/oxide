@@ -1,14 +1,13 @@
 use std::path::PathBuf;
 use std::{fs, io};
 
-pub fn examples() -> io::Result<Vec<PathBuf>> {
+pub fn code() -> io::Result<Vec<PathBuf>> {
     let mut root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    root.push("examples");
+    root.push("tests/code");
 
     Ok(fs::read_dir(root)?
         .filter_map(|entry| {
-            let entry = entry.ok()?;
-            let filename = entry.path();
+            let filename = entry.ok()?.path();
             if filename.extension()? == "oxide" {
                 Some(filename)
             } else {
