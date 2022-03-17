@@ -1,14 +1,16 @@
-use crate::ast::{ExprNode, Expression, Id, Node, Op, Span};
+use crate::ast::{Expr, ExprNode, Expression, Exprs, Id, Node, Op};
 
+/// An assignment.
+/// The expression(s) in targets should be one of Id, Subscript, or Attribute.
 #[derive(Debug, PartialEq)]
 pub struct Assign<'a> {
-    pub targets: Vec<Id<'a>>,
+    pub targets: Exprs<'a>,
     pub expr: ExprNode<'a>,
 }
 
 #[derive(Debug, PartialEq)]
 pub struct AugAssign<'a> {
-    pub target: Id<'a>,
+    pub target: Expr<'a>,
     pub op: Op,
     pub expr: ExprNode<'a>,
 }
@@ -76,7 +78,7 @@ pub enum Statement<'a> {
 
 impl<'a> Statement<'a> {
     pub fn loc(self, start: usize, end: usize) -> StmtNode<'a> {
-        Node::new(self, Span(start, end))
+        Node::new(self, start, end)
     }
     pub fn node(self) -> StmtNode<'a> {
         self.loc(0, 0)
@@ -103,6 +105,6 @@ impl<'a> From<AugAssign<'a>> for Statement<'a> {
 
 impl<'a> From<ExprNode<'a>> for StmtNode<'a> {
     fn from(e: ExprNode<'a>) -> Self {
-        Node::new(Statement::Expr(e.value), e.location)
+        Node::new(Statement::Expr(e.value), e.start, e.end)
     }
 }

@@ -2,11 +2,7 @@
 //  GreatestCommonDivisor.cub
 //
 
-import pragma.cub
-
-import math
-
-func gcd(p, q) {
+func gcd(p, q) returns {
 	if q == 0 {
 		return p
 	} else {

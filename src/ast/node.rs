@@ -1,23 +1,21 @@
 use std::fmt;
 
 #[derive(Debug)]
-pub struct Span(pub usize, pub usize);
-
-#[derive(Debug)]
 pub struct Node<T>
 where
     T: fmt::Debug + PartialEq,
 {
     pub value: T,
-    pub location: Span,
+    pub start: usize,
+    pub end: usize,
 }
 
 impl<T> Node<T>
 where
     T: fmt::Debug + PartialEq,
 {
-    pub fn new(value: T, location: Span) -> Self {
-        Node { value, location }
+    pub fn new(value: T, start: usize, end: usize) -> Self {
+        Node { value, start, end }
     }
 }
 

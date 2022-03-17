@@ -2,16 +2,12 @@
 //  Primes.cub
 //
 
-import pragma.cub
-
-import math
-
-func isPrime(num) {
+func isPrime(num) returns {
 	if num < 2 {
 		return false
 	}
 	
-	max = math.sqrt(num)
+	max = sqrt(num)
 	
 	for i = 0, i < max, i += 2 {
 		m = mod(num, 2)

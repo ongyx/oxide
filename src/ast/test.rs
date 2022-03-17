@@ -79,7 +79,7 @@ fn assign() {
     assert_eq!(
         body("a = b"),
         vec![Statement::from(Assign {
-            targets: vec!["a"],
+            targets: vec![Expression::Id("a").node()],
             expr: Expression::Id("b").node()
         })
         .node()]
@@ -91,7 +91,7 @@ fn multiple_assign() {
     assert_eq!(
         body("a, b = [1, 2]"),
         vec![Statement::from(Assign {
-            targets: vec!["a", "b"],
+            targets: vec![Expression::Id("a").node(), Expression::Id("b").node()],
             expr: Expression::Array(vec![literal(1), literal(2)]).node()
         })
         .node()]
@@ -103,7 +103,7 @@ fn function_call() {
     assert_eq!(
         body("print('Hello World!')"),
         vec![Expression::Call {
-            name: "print",
+            value: Box::new(Expression::Id("print").node()),
             args: vec![literal("Hello World!")]
         }
         .node()
@@ -168,7 +168,7 @@ fn if_chain() {
         body(code0),
         vec![
             Statement::from(Assign {
-                targets: vec!["a"],
+                targets: vec![Expression::Id("a").node()],
                 expr: literal(1)
             })
             .node(),
@@ -181,14 +181,14 @@ fn if_chain() {
                     }
                     .node(),
                     body: vec![Expression::Call {
-                        name: "print",
+                        value: Box::new(Expression::Id("print").node()),
                         args: vec![literal("nice")]
                     }
                     .node()
                     .into()],
                 }],
                 else_: Some(vec![Expression::Call {
-                    name: "print",
+                    value: Box::new(Expression::Id("print").node()),
                     args: vec![literal("impossible")]
                 }
                 .node()
@@ -204,7 +204,7 @@ fn if_chain() {
             chain: vec![If {
                 cond: literal(true),
                 body: vec![Expression::Call {
-                    name: "print",
+                    value: Box::new(Expression::Id("print").node()),
                     args: vec![literal("indeed")]
                 }
                 .node()
@@ -228,7 +228,7 @@ fn for_loop() {
         body(code),
         vec![Statement::Loop {
             init: Some(Assign {
-                targets: vec!["i"],
+                targets: vec![Expression::Id("i").node()],
                 expr: literal(0),
             }),
             cond: Expression::Binop {
@@ -238,12 +238,12 @@ fn for_loop() {
             }
             .node(),
             next: Some(AugAssign {
-                target: "i",
+                target: Box::new(Expression::Id("i").node()),
                 op: Op::Add,
                 expr: literal(1)
             }),
             body: vec![Expression::Call {
-                name: "print",
+                value: Box::new(Expression::Id("print").node()),
                 args: vec![Expression::Id("i").node()]
             }
             .node()
@@ -271,7 +271,7 @@ fn while_loop() {
             next: None,
             body: vec![
                 Expression::Call {
-                    name: "print",
+                    value: Box::new(Expression::Id("print").node()),
                     args: vec![literal("lol")]
                 }
                 .node()

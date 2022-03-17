@@ -14,7 +14,7 @@ use peg::str::LineCol;
 pub use expr::*;
 pub use grammar::parser;
 pub use literal::*;
-pub use node::{Node, Span};
+pub use node::Node;
 pub use stmt::*;
 
 pub fn literal<'a, T>(value: T) -> ExprNode<'a>

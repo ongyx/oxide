@@ -1,0 +1,9 @@
+//
+//  UnicodeSumFunction.cub
+//
+
+func ∑(a, b) returns {
+	return a + b
+}
+
+😀 = ∑(2, 3)

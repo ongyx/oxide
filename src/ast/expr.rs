@@ -1,4 +1,4 @@
-use crate::ast::{Literal, Node, Span};
+use crate::ast::{Literal, Node};
 
 pub type Id<'a> = &'a str;
 
@@ -45,7 +45,7 @@ pub enum Expression<'a> {
     },
 
     Call {
-        name: Id<'a>,
+        value: Expr<'a>,
         args: Exprs<'a>,
     },
 
@@ -53,11 +53,16 @@ pub enum Expression<'a> {
         value: Expr<'a>,
         by: Expr<'a>,
     },
+
+    Attribute {
+        value: Expr<'a>,
+        attr: Id<'a>,
+    },
 }
 
 impl<'a> Expression<'a> {
     pub fn loc(self, start: usize, end: usize) -> ExprNode<'a> {
-        Node::new(self, Span(start, end))
+        Node::new(self, start, end)
     }
     pub fn node(self) -> ExprNode<'a> {
         self.loc(0, 0)

@@ -75,7 +75,7 @@ peg::parser! {
             / node(<while_loop()>)
 
         rule function() -> Statement<'input>
-            = "func" __ name:target() _ "(" _ params:targets()? _ varargs:varargs()? _ ")" _ body:body() {
+            = "func" __ name:ident() _ "(" _ params:idents()? _ varargs:varargs()? _ ")" _ body:body() {
                 Statement::Function {
                     name,
                     params: params.unwrap_or(vec![]),
@@ -84,10 +84,10 @@ peg::parser! {
                 }
             }
 
-        rule varargs() -> Id<'input> = "..." t:target() {t}
+        rule varargs() -> Id<'input> = "..." t:ident() {t}
 
         rule struct_() -> Statement<'input>
-            = "struct" __ name:target() _ "{" ___ fields:targets() ___ "}" {
+            = "struct" __ name:ident() _ "{" ___ fields:idents() ___ "}" {
                 Statement::Struct { name, fields }
             }
 
@@ -124,7 +124,7 @@ peg::parser! {
             }
 
         rule for_in_loop() -> Statement<'input>
-            = "for" __ targets:targets() __ "in" __ value:expr() _ body:body() {
+            = "for" __ targets:idents() __ "in" __ value:expr() _ body:body() {
                 Statement::Iter {
                     targets, value, body
                 }
@@ -145,13 +145,13 @@ peg::parser! {
             / aa:augassign() {aa.into()}
 
         rule assign() -> Assign<'input>
-            = targets:identifiers() _ "=" _ expr:expr() {
+            = targets:exprs() _ "=" _ expr:expr() {
                 Assign {targets, expr}
             }
 
         rule augassign() -> AugAssign<'input>
-            = target:target() _ op:augop() "=" _ expr:expr() {
-                AugAssign {target, op, expr}
+            = target:expr() _ op:augop() "=" _ expr:expr() {
+                AugAssign {target: Box::new(target), op, expr}
             }
 
         rule augop() -> Op
@@ -171,14 +171,14 @@ peg::parser! {
             = "import" __ "*" __ "from" __ package:path() {
                 Statement::Import {package, members: Some(vec!["*"])}
             }
-            / "import" __ members:targets() __ "from" __ package:path() {
+            / "import" __ members:idents() __ "from" __ package:path() {
                 Statement::Import {package, members: Some(members)}
             }
             / "import" __ package:path() {
                 Statement::Import {package, members: None}
             }
 
-        rule path() -> Id<'input> = $($("."*) identifier()) / $("."+)
+        rule path() -> Id<'input> = $($("."*) ident()) / $("."+)
 
         rule return_() -> Statement<'input>
             = "return" __ expr:expr() {Statement::Return(expr.value)}
@@ -188,7 +188,7 @@ peg::parser! {
 
         pub rule expr() -> ExprNode<'input> = precedence!{
             start:position!() e:@ end:position!() {
-                Node::new(e, Span(start, end))
+                Node::new(e, start, end)
             }
             --
             lhs:(@) _ "||" _ rhs:@ { binop(Op::Or, lhs, rhs) }
@@ -215,14 +215,16 @@ peg::parser! {
             lhs:@ _ "^" _ rhs:(@) { binop(Op::Pow, lhs, rhs) }
             --
             // function call
-            name:identifier() "(" ___ args:exprs()? ___ ")" { Expression::Call {name, args: args.unwrap_or(vec![])} }
+            value:(@) "(" ___ args:exprs()? ___ ")" { Expression::Call {value: Box::new(value), args: args.unwrap_or(vec![])} }
             // subscript
             value:(@) "[" ___ by:expr() ___ "]" { Expression::Subscript {value: Box::new(value), by: Box::new(by)} }
+            // attribute
+            value:(@) "." attr:ident() { Expression::Attribute { value: Box::new(value), attr } }
             --
             // literal value
             l:literal() { Expression::Literal(l) }
             // identifier
-            id:identifier() { Expression::Id(id) }
+            id:ident() { Expression::Id(id) }
             // expr wrapped in parentheses
             "(" ___ e:expr() ___ ")" {e.value}
             // array literal
@@ -241,16 +243,10 @@ peg::parser! {
             = "'" s:$([^'\'']*) "'" {s}
             / "\"" s:$([^'"']*) "\"" {s}
 
-        rule identifiers() -> Vec<Id<'input>>
-            = identifier() ++ (_ "," _)
+        rule idents() -> Vec<Id<'input>>
+            = ident() ++ (_ "," _)
 
-        rule identifier() -> Id<'input>
-            = $(target() ++ ".")
-
-        rule targets() -> Vec<Id<'input>>
-            = target() ++ (_ "," _)
-
-        rule target() -> Id<'input>
+        rule ident() -> Id<'input>
             = quiet!{ !keyword() id:$(alpha() alphanumeric()*) {id} } / expected!("identifier")
 
         rule alphanumeric() = ['a' ..= 'z' | 'A' ..= 'Z' | '0' ..= '9' | '_']
@@ -266,7 +262,7 @@ peg::parser! {
 
         rule node<T: fmt::Debug + PartialEq>(r: rule<T>) -> Node<T>
             = start:position!() r:r() end:position!() {
-                Node::new(r, Span(start, end))
+                Node::new(r, start, end)
             }
 
         rule ___ = quiet!{[' ' | '\t' | '\n']*}
