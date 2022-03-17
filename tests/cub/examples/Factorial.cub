@@ -2,7 +2,7 @@
 //  Factorial.cub
 //
 
-func factorial(x) returns {
+func factorial(x) {
 	
 	if x > 1 {
 		return x * factorial(x - 1)

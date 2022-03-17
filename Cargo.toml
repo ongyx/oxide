@@ -4,9 +4,10 @@ version = "0.3.2"
 edition = "2021"
 
 [dependencies]
+lazy_static = "1.4.0"
 peg = "0.8.0"
 strum = { version = "0.24", features = ["derive"] }
-lazy_static = "1.4.0"
+unicode-xid = "0.2.2"
 
 [features]
 trace = ["peg/trace"]

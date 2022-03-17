@@ -2,7 +2,7 @@
 //  Fibonacci.cub
 //
 
-func fibonacci(n) returns {
+func fibonacci(n) {
 	if n == 0 {
 		return 0
 	}

@@ -1,5 +1,7 @@
 use std::fmt;
 
+use unicode_xid::UnicodeXID;
+
 use crate::ast::*;
 
 fn binop<'a>(op: Op, lhs: ExprNode<'a>, rhs: ExprNode<'a>) -> Expression<'a> {
@@ -51,9 +53,9 @@ peg::parser! {
                 }
             }
 
-        // A line that might have a statement and/or a comment.
+        // A line that might have a statement and any number of comments.
         rule line() -> Option<StmtNode<'input>>
-            = _ s:statement()? _ comment()? {s}
+            = _ s:statement()? _ comment() ** _ {s}
 
         pub rule statement() -> StmtNode<'input>
             = compound_statement() / simple_statement()
@@ -235,8 +237,8 @@ peg::parser! {
             = "true" {Literal::Boolean(true)}
             / "false" {Literal::Boolean(false)}
             / "nil" {Literal::Nil}
-            / i:$(numeric()+) {Literal::Integer(i.parse().unwrap())}
             / f:$(numeric()+ "." numeric()*) {Literal::Float(f.parse().unwrap())}
+            / i:$(numeric()+) {Literal::Integer(i.parse().unwrap())}
             / s:string_literal() {Literal::String(s)}
 
         rule string_literal() -> &'input str
@@ -247,18 +249,24 @@ peg::parser! {
             = ident() ++ (_ "," _)
 
         rule ident() -> Id<'input>
-            = quiet!{ !keyword() id:$(alpha() alphanumeric()*) {id} } / expected!("identifier")
+            = quiet!{
+                id:$(
+                    !keyword()
+                    ("_" / [c if c.is_xid_start()])
+                    [c if c.is_xid_continue()]*
+                ) {id}
+            }
+            / expected!("identifier")
 
-        rule alphanumeric() = ['a' ..= 'z' | 'A' ..= 'Z' | '0' ..= '9' | '_']
+        rule keyword() = ("true" / "false" / "nil" / "for" / "while" / "break" / "continue" / "func" / "return" / "if" / "else" / "import" / "from") !ident()
 
         rule numeric() = ['0' ..= '9']
 
-        rule alpha() = ['a' ..= 'z' | 'A' ..= 'Z' | '_']
-
-        // Keywords cannot be used as identifiers.
-        rule keyword() = "true" / "false" / "nil" / "for" / "while" / "break" / "continue" / "func" / "return" / "if" / "else" / "import" / "from"
-
-        rule comment() = quiet!{ "//" $([^'\n']*) }
+        rule comment()
+            = quiet!{
+                "//" [^'\n']*
+                / "/*" (!"*/" [_])* "*/"
+            }
 
         rule node<T: fmt::Debug + PartialEq>(r: rule<T>) -> Node<T>
             = start:position!() r:r() end:position!() {

@@ -8,7 +8,7 @@
 
 b = 2
 
-func add(x) returns {
+func add(x) {
 	return b + x
 }
 

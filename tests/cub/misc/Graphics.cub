@@ -13,12 +13,12 @@ struct Color {
 }
 
 /// Color convenience init.
-func rgb(r, g, b) returns {
+func rgb(r, g, b) {
 	return Color(r, g, b, 1.0)
 }
 
 /// Color convenience init.
-func rgba(r, g, b, a) returns {
+func rgba(r, g, b, a) {
 	return Color(r, g, b, a)
 }
 

@@ -6,7 +6,7 @@
 //  Copyright © 2017 Silver Fox. All rights reserved.
 //
 
-func foo(x) returns {
+func foo(x) {
 	return x * 10
 }
 

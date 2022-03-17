@@ -4,7 +4,7 @@ while test(y) {
 	y = 0
 }
 
-func test(x) returns {
+func test(x) {
 	return x > 0
 }
 

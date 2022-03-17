@@ -2,7 +2,7 @@
 //  Primes.cub
 //
 
-func isPrime(num) returns {
+func isPrime(num) {
 	if num < 2 {
 		return false
 	}

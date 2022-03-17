@@ -21,6 +21,7 @@ dependencies = [
  "lazy_static",
  "peg",
  "strum",
+ "unicode-xid",
 ]
 
 [[package]]
