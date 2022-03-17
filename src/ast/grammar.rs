@@ -1,6 +1,8 @@
-use crate::ast::node::*;
+use std::fmt;
 
-fn binop<'a>(op: Op, lhs: Expression<'a>, rhs: Expression<'a>) -> Expression<'a> {
+use crate::ast::*;
+
+fn binop<'a>(op: Op, lhs: ExprNode<'a>, rhs: ExprNode<'a>) -> Expression<'a> {
     Expression::Binop {
         op,
         lhs: Box::new(lhs),
@@ -8,7 +10,7 @@ fn binop<'a>(op: Op, lhs: Expression<'a>, rhs: Expression<'a>) -> Expression<'a>
     }
 }
 
-fn unop<'a>(op: Op, rhs: Expression<'a>) -> Expression<'a> {
+fn unop<'a>(op: Op, rhs: ExprNode<'a>) -> Expression<'a> {
     Expression::Unop {
         op,
         rhs: Box::new(rhs),
@@ -50,27 +52,27 @@ peg::parser! {
             }
 
         // A line that might have a statement and/or a comment.
-        rule line() -> Option<Statement<'input>>
+        rule line() -> Option<StmtNode<'input>>
             = _ s:statement()? _ comment()? {s}
 
-        pub rule statement() -> Statement<'input>
+        pub rule statement() -> StmtNode<'input>
             = compound_statement() / simple_statement()
 
-        rule simple_statement() -> Statement<'input>
-            = assignment()
-            / e:expr() {Statement::Expr(e)}
-            / break_()
-            / continue_()
-            / import()
-            / return_()
+        rule simple_statement() -> StmtNode<'input>
+            = node(<assignment()>)
+            / e:expr() {e.into()}
+            / node(<break_()>)
+            / node(<continue_()>)
+            / node(<import()>)
+            / node(<return_()>)
 
-        rule compound_statement() -> Statement<'input>
-            = function()
-            / struct_()
-            / if_else()
-            / for_loop()
-            / for_in_loop()
-            / while_loop()
+        rule compound_statement() -> StmtNode<'input>
+            = node(<function()>)
+            / node(<struct_()>)
+            / node(<if_else()>)
+            / node(<for_loop()>)
+            / node(<for_in_loop()>)
+            / node(<while_loop()>)
 
         rule function() -> Statement<'input>
             = "func" __ name:target() _ "(" _ params:targets()? _ varargs:varargs()? _ ")" _ body:body() {
@@ -179,12 +181,16 @@ peg::parser! {
         rule path() -> Id<'input> = $($("."*) identifier()) / $("."+)
 
         rule return_() -> Statement<'input>
-            = "return" __ expr:expr() {Statement::Return(expr)}
+            = "return" __ expr:expr() {Statement::Return(expr.value)}
 
         rule exprs() -> Exprs<'input>
             = expr() ++ (_ "," ___)
 
-        pub rule expr() -> Expression<'input> = precedence!{
+        pub rule expr() -> ExprNode<'input> = precedence!{
+            start:position!() e:@ end:position!() {
+                Node::new(e, Span(start, end))
+            }
+            --
             lhs:(@) _ "||" _ rhs:@ { binop(Op::Or, lhs, rhs) }
             --
             lhs:(@) _ "&&" _ rhs:@ { binop(Op::And, lhs, rhs) }
@@ -218,7 +224,7 @@ peg::parser! {
             // identifier
             id:identifier() { Expression::Id(id) }
             // expr wrapped in parentheses
-            "(" ___ e:expr() ___ ")" {e}
+            "(" ___ e:expr() ___ ")" {e.value}
             // array literal
             "[" ___ e:exprs()? ___ "]" { Expression::Array(e.unwrap_or(vec![])) }
         }
@@ -256,10 +262,16 @@ peg::parser! {
         // Keywords cannot be used as identifiers.
         rule keyword() = "true" / "false" / "nil" / "for" / "while" / "break" / "continue" / "func" / "return" / "if" / "else" / "import" / "from"
 
+        rule comment() = quiet!{ "//" $([^'\n']*) }
+
+        rule node<T: fmt::Debug + PartialEq>(r: rule<T>) -> Node<T>
+            = start:position!() r:r() end:position!() {
+                Node::new(r, Span(start, end))
+            }
+
         rule ___ = quiet!{[' ' | '\t' | '\n']*}
         rule __ = quiet!{[' ' | '\t']+}
         rule _ = quiet!{[' ' | '\t']*}
 
-        rule comment() = quiet!{ "//" $([^'\n']*) }
     }
 }

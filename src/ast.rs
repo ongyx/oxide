@@ -1,4 +1,7 @@
-pub mod node;
+mod expr;
+mod literal;
+mod node;
+mod stmt;
 
 mod grammar;
 
@@ -8,8 +11,18 @@ mod test;
 use peg::error::ParseError;
 use peg::str::LineCol;
 
-pub use crate::ast::grammar::parser;
-use crate::ast::node::Body;
+pub use expr::*;
+pub use grammar::parser;
+pub use literal::*;
+pub use node::{Node, Span};
+pub use stmt::*;
+
+pub fn literal<'a, T>(value: T) -> ExprNode<'a>
+where
+    T: Into<Literal<'a>>,
+{
+    Expression::Literal(value.into()).node()
+}
 
 pub struct Ast<'a> {
     pub source: &'a str,

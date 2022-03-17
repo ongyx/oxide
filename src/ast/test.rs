@@ -1,5 +1,4 @@
-use crate::ast::node::*;
-use crate::ast::Ast;
+use crate::ast::*;
 
 fn body(code: &str) -> Body {
     let mut ast = Ast::new(code);
@@ -7,11 +6,15 @@ fn body(code: &str) -> Body {
         Err(e) => {
             panic!("{}", ast.format(e));
         }
-        _ => ast.root.expect("ast error"),
+        _ => {
+            let root = ast.root.expect("ast error");
+            // println!("{:#?}", root);
+            root
+        }
     }
 }
 
-fn expr(code: &str) -> Statement {
+fn expr(code: &str) -> StmtNode {
     let mut ast = Ast::new(code);
     match ast.parse_expr() {
         Err(e) => {
@@ -19,7 +22,9 @@ fn expr(code: &str) -> Statement {
         }
         _ => {
             let mut root = ast.root.expect("ast error");
-            root.swap_remove(0)
+            let stmt = root.swap_remove(0);
+            // println!("{:#?}", stmt);
+            stmt
         }
     }
 }
@@ -28,11 +33,9 @@ fn expr(code: &str) -> Statement {
 fn array_literal() {
     assert_eq!(
         expr("[1, 2, 3]"),
-        Statement::Expr(Expression::Array(vec![
-            Literal::Integer(1).into(),
-            Literal::Integer(2).into(),
-            Literal::Integer(3).into(),
-        ]))
+        Expression::Array(vec![literal(1), literal(2), literal(3),])
+            .node()
+            .into()
     )
 }
 
@@ -42,9 +45,10 @@ fn add() {
         expr("1 + 1"),
         Expression::Binop {
             op: Op::Add,
-            lhs: Box::new(Literal::Integer(1).into()),
-            rhs: Box::new(Literal::Integer(1).into()),
+            lhs: Box::new(literal(1)),
+            rhs: Box::new(literal(1)),
         }
+        .node()
         .into()
     )
 }
@@ -55,13 +59,17 @@ fn nested_add() {
         expr("(1 + (2 + (3)))"),
         Expression::Binop {
             op: Op::Add,
-            lhs: Box::new(Literal::Integer(1).into()),
-            rhs: Box::new(Expression::Binop {
-                op: Op::Add,
-                lhs: Box::new(Literal::Integer(2).into()),
-                rhs: Box::new(Literal::Integer(3).into()),
-            }),
+            lhs: Box::new(literal(1)),
+            rhs: Box::new(
+                Expression::Binop {
+                    op: Op::Add,
+                    lhs: Box::new(literal(2)),
+                    rhs: Box::new(literal(3)),
+                }
+                .node()
+            ),
         }
+        .node()
         .into()
     );
 }
@@ -70,11 +78,11 @@ fn nested_add() {
 fn assign() {
     assert_eq!(
         body("a = b"),
-        vec![Assign {
+        vec![Statement::from(Assign {
             targets: vec!["a"],
-            expr: Expression::Id("b")
-        }
-        .into()]
+            expr: Expression::Id("b").node()
+        })
+        .node()]
     )
 }
 
@@ -82,11 +90,11 @@ fn assign() {
 fn multiple_assign() {
     assert_eq!(
         body("a, b = [1, 2]"),
-        vec![Assign {
+        vec![Statement::from(Assign {
             targets: vec!["a", "b"],
-            expr: Expression::Array(vec![Literal::Integer(1).into(), Literal::Integer(2).into()])
-        }
-        .into()]
+            expr: Expression::Array(vec![literal(1), literal(2)]).node()
+        })
+        .node()]
     )
 }
 
@@ -96,8 +104,9 @@ fn function_call() {
         body("print('Hello World!')"),
         vec![Expression::Call {
             name: "print",
-            args: vec![Literal::String("Hello World!").into()]
+            args: vec![literal("Hello World!")]
         }
+        .node()
         .into()]
     )
 }
@@ -121,8 +130,9 @@ fn function_def() {
             name: "main",
             params: vec![],
             varargs: None,
-            body: vec![Statement::Return(Literal::Integer(0).into())]
-        }]
+            body: vec![Statement::Return(literal(0).value).node()]
+        }
+        .node()]
     );
 
     assert_eq!(
@@ -131,8 +141,9 @@ fn function_def() {
             name: "main",
             params: vec![],
             varargs: Some("args"),
-            body: vec![Statement::Return(Expression::Id("args"))]
-        }]
+            body: vec![Statement::Return(Expression::Id("args")).node()]
+        }
+        .node()]
     );
 }
 
@@ -156,48 +167,52 @@ fn if_chain() {
     assert_eq!(
         body(code0),
         vec![
-            Assign {
+            Statement::from(Assign {
                 targets: vec!["a"],
-                expr: Literal::Integer(1).into()
-            }
-            .into(),
-            IfElse {
+                expr: literal(1)
+            })
+            .node(),
+            Statement::from(IfElse {
                 chain: vec![If {
                     cond: Expression::Binop {
                         op: Op::Eq,
-                        lhs: Box::new(Expression::Id("a")),
-                        rhs: Box::new(Literal::Integer(1).into()),
-                    },
+                        lhs: Box::new(Expression::Id("a").node()),
+                        rhs: Box::new(literal(1)),
+                    }
+                    .node(),
                     body: vec![Expression::Call {
                         name: "print",
-                        args: vec![Literal::String("nice").into()]
+                        args: vec![literal("nice")]
                     }
+                    .node()
                     .into()],
                 }],
                 else_: Some(vec![Expression::Call {
                     name: "print",
-                    args: vec![Literal::String("impossible").into()]
+                    args: vec![literal("impossible")]
                 }
+                .node()
                 .into()])
-            }
-            .into(),
+            })
+            .node(),
         ]
     );
 
     assert_eq!(
         body(code1),
-        vec![IfElse {
+        vec![Statement::from(IfElse {
             chain: vec![If {
-                cond: Literal::Boolean(true).into(),
+                cond: literal(true),
                 body: vec![Expression::Call {
                     name: "print",
-                    args: vec![Literal::String("indeed").into()]
+                    args: vec![literal("indeed")]
                 }
+                .node()
                 .into()],
             }],
             else_: None,
-        }
-        .into()]
+        })
+        .node()]
     );
 }
 
@@ -212,32 +227,29 @@ fn for_loop() {
     assert_eq!(
         body(code),
         vec![Statement::Loop {
-            init: Some(
-                Assign {
-                    targets: vec!["i"],
-                    expr: Literal::Integer(0).into(),
-                }
-                .into()
-            ),
+            init: Some(Assign {
+                targets: vec!["i"],
+                expr: literal(0),
+            }),
             cond: Expression::Binop {
                 op: Op::Lt,
-                lhs: Box::new(Expression::Id("i")),
-                rhs: Box::new(Literal::Integer(5).into()),
-            },
-            next: Some(
-                AugAssign {
-                    target: "i",
-                    op: Op::Add,
-                    expr: Literal::Integer(1).into()
-                }
-                .into()
-            ),
+                lhs: Box::new(Expression::Id("i").node()),
+                rhs: Box::new(literal(5)),
+            }
+            .node(),
+            next: Some(AugAssign {
+                target: "i",
+                op: Op::Add,
+                expr: literal(1)
+            }),
             body: vec![Expression::Call {
                 name: "print",
-                args: vec![Expression::Id("i")]
+                args: vec![Expression::Id("i").node()]
             }
+            .node()
             .into()]
-        }]
+        }
+        .node()]
     )
 }
 
@@ -255,18 +267,20 @@ fn while_loop() {
         body(code),
         vec![Statement::Loop {
             init: None,
-            cond: Literal::Boolean(true).into(),
+            cond: literal(true),
             next: None,
             body: vec![
                 Expression::Call {
                     name: "print",
-                    args: vec![Literal::String("lol").into()]
+                    args: vec![literal("lol")]
                 }
+                .node()
                 .into(),
-                Statement::Break,
-                Statement::Continue
+                Statement::Break.node(),
+                Statement::Continue.node()
             ]
-        }]
+        }
+        .node()]
     )
 }
 
@@ -277,7 +291,8 @@ fn import() {
         vec![Statement::Import {
             package: "math",
             members: None,
-        }]
+        }
+        .node()]
     )
 }
 
@@ -288,27 +303,31 @@ fn import_from() {
         vec![Statement::Import {
             package: "math",
             members: Some(vec!["ceil", "floor"])
-        }]
+        }
+        .node()]
     );
     assert_eq!(
         body("import local_module from ."),
         vec![Statement::Import {
             package: ".",
             members: Some(vec!["local_module"])
-        }]
+        }
+        .node()]
     );
     assert_eq!(
         body("import foo, bar from .local_module"),
         vec![Statement::Import {
             package: ".local_module",
             members: Some(vec!["foo", "bar"])
-        }]
+        }
+        .node()]
     );
     assert_eq!(
         body("import * from ."),
         vec![Statement::Import {
             package: ".",
             members: Some(vec!["*"])
-        }]
+        }
+        .node()]
     );
 }
