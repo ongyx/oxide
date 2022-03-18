@@ -14,13 +14,13 @@ func foo() {
 		a += 1
 	}
 	
-	do 10 times {
+	for _ in range(10) {
 		bar()
 	}
 	
 }
 
-do 10 times {
+for _ in range(10) {
 	foo()
 }
 

@@ -35,6 +35,7 @@ impl<'a> Ast<'a> {
     }
 
     pub fn format(&self, e: ParseError<LineCol>) -> String {
+        println!("{:?}", e);
         let code_line = self.source.lines().nth(e.location.line - 1).unwrap();
 
         format!(

@@ -226,22 +226,22 @@ fn for_loop() {
 
     assert_eq!(
         body(code),
-        vec![Statement::Loop {
-            init: Some(Assign {
+        vec![Statement::For {
+            init: Assign {
                 targets: vec![Expression::Id("i").node()],
                 expr: literal(0),
-            }),
+            },
             cond: Expression::Binop {
                 op: Op::Lt,
                 lhs: Box::new(Expression::Id("i").node()),
                 rhs: Box::new(literal(5)),
             }
             .node(),
-            next: Some(AugAssign {
+            next: AugAssign {
                 target: Box::new(Expression::Id("i").node()),
                 op: Op::Add,
                 expr: literal(1)
-            }),
+            },
             body: vec![Expression::Call {
                 value: Box::new(Expression::Id("print").node()),
                 args: vec![Expression::Id("i").node()]
@@ -265,10 +265,8 @@ fn while_loop() {
 
     assert_eq!(
         body(code),
-        vec![Statement::Loop {
-            init: None,
+        vec![Statement::While {
             cond: literal(true),
-            next: None,
             body: vec![
                 Expression::Call {
                     value: Box::new(Expression::Id("print").node()),
@@ -278,7 +276,8 @@ fn while_loop() {
                 .into(),
                 Statement::Break.node(),
                 Statement::Continue.node()
-            ]
+            ],
+            repeat: false
         }
         .node()]
     )

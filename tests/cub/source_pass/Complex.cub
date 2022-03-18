@@ -5,7 +5,7 @@
 i = (1 - 2) * 3
 sum = 1
 
-do 10 times {
+for _ in range(10) {
 	
 	while i < 10 {
 		

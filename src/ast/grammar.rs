@@ -75,6 +75,7 @@ peg::parser! {
             / node(<for_loop()>)
             / node(<for_in_loop()>)
             / node(<while_loop()>)
+            / node(<repeat_while_loop()>)
 
         rule function() -> Statement<'input>
             = "func" __ name:ident() _ "(" _ params:idents()? _ varargs:varargs()? _ ")" _ body:body() {
@@ -117,29 +118,22 @@ peg::parser! {
 
         rule for_loop() -> Statement<'input>
             = "for" __ init:assign() _ "," _ cond:expr() _ "," _ next:augassign() _ body:body() {
-                Statement::Loop{
-                    init: Some(init),
-                    cond,
-                    next: Some(next),
-                    body
-                }
+                Statement::For { init, cond, next, body }
             }
 
         rule for_in_loop() -> Statement<'input>
             = "for" __ targets:idents() __ "in" __ value:expr() _ body:body() {
-                Statement::Iter {
-                    targets, value, body
-                }
+                Statement::Iter { targets, value, body }
             }
 
         rule while_loop() -> Statement<'input>
             = "while" __ cond:expr() _ body:body() {
-                Statement::Loop {
-                    init: None,
-                    cond,
-                    next: None,
-                    body
-                }
+                Statement::While { cond, body, repeat: false }
+            }
+
+        rule repeat_while_loop() -> Statement<'input>
+            = "repeat" _ body:body() _ "while" __ cond:expr() {
+                Statement::While { cond, body, repeat: true }
             }
 
         rule assignment() -> Statement<'input>
@@ -242,8 +236,45 @@ peg::parser! {
             / s:string_literal() {Literal::String(s)}
 
         rule string_literal() -> &'input str
-            = "'" s:$([^'\'']*) "'" {s}
-            / "\"" s:$([^'"']*) "\"" {s}
+            = "'" s:$(single_string()*) "'" {s}
+            / "\"" s:$(double_string()*) "\"" {s}
+
+        // https://stackoverflow.com/a/34019313
+        rule double_string() -> String
+            = s:$(
+                !['"' | '\\'] [_]
+            ) {String::from(s)}
+            / escape_seq()
+
+        rule single_string() -> String
+            = s:$(
+                !['\'' | '\\'] [_]
+            ) {String::from(s)}
+            / escape_seq()
+
+        rule escape_seq() -> String
+            = "\\" c:escape_seq_char() {c}
+
+        rule escape_seq_char() -> String
+            = c:$("'" / "\"" / "\\" / "n" / "r" / "t") {
+                String::from(
+                    match c {
+                        "n" => "\n",
+                        "r" => "\r",
+                        "t" => "\t",
+                        _ => c
+                    }
+                )
+            }
+            / b:$(numeric()*<1,3>) {?
+                match b.parse::<u8>() {
+                    Ok(byte) => {
+                        let mut buf = [0];
+                        Ok((byte as char).encode_utf8(&mut buf).to_owned())
+                    }
+                    Err(_) => Err("byte escape must be in range 0-255")
+                }
+            }
 
         rule idents() -> Vec<Id<'input>>
             = ident() ++ (_ "," _)
@@ -258,7 +289,7 @@ peg::parser! {
             }
             / expected!("identifier")
 
-        rule keyword() = ("true" / "false" / "nil" / "for" / "while" / "break" / "continue" / "func" / "return" / "if" / "else" / "import" / "from") !ident()
+        rule keyword() = ("true" / "false" / "nil" / "for" / "while" / "repeat" / "break" / "continue" / "func" / "return" / "if" / "else" / "import" / "from") !ident()
 
         rule numeric() = ['0' ..= '9']
 

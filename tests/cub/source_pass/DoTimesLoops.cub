@@ -8,9 +8,9 @@
 
 a = 0
 
-do 100 times {
+for _ in range(100) {
 
-	do 100 times {
+	for _ in range(100) {
 
 		a += 1
 

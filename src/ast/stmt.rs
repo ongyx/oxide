@@ -40,11 +40,17 @@ pub enum Statement<'a> {
         body: Body<'a>,
     },
 
-    Loop {
-        init: Option<Assign<'a>>,
+    For {
+        init: Assign<'a>,
         cond: ExprNode<'a>,
-        next: Option<AugAssign<'a>>,
+        next: AugAssign<'a>,
         body: Body<'a>,
+    },
+
+    While {
+        cond: ExprNode<'a>,
+        body: Body<'a>,
+        repeat: bool,
     },
 
     Function {

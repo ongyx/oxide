@@ -8,6 +8,6 @@
 
 a = 5
 
-do 10000 times {
+for _ in range(10000) {
 	mod(a, a + 2)
 }
